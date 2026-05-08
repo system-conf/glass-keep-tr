@@ -1,6 +1,6 @@
-# Glass Keep
+# Keep Pro
 
-Modern not uygulaması. Markdown, yapılacaklar listesi, görseller, etiketler, renk temaları, karanlık mod, sürükle-bırak, içe/dışa aktarma, kimlik doğrulama ve gerçek zamanlı işbirliği.
+Modern not uygulaması. Markdown, yapilacaklar listesi, Gorseller, etiketler, renk temalari, karanlik mod, surukle-birak, ice/disa aktarma, kimlik dogrulama ve gercek zamanli isbirligi.
 
 **Teknoloji:** React 19, Vite 7, Express, Turso (cloud SQLite), StarkCDN (görsel depolama), Tailwind CSS 4
 
