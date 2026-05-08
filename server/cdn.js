@@ -1,6 +1,6 @@
 const CDN_BASE = "https://cdn.starkbilisim.com/api/api.php";
 const API_KEY = process.env.STARKCDN_API_KEY || "";
-const PROJECT_ID = process.env.STARKCDN_PROJECT_ID || "1";
+const PROJECT_ID = process.env.STARKCDN_PROJECT_ID || "8";
 
 async function uploadImage(buffer, filename, mimetype) {
   const FormData = (await import("form-data")).default;
@@ -8,14 +8,32 @@ async function uploadImage(buffer, filename, mimetype) {
   form.append("project_id", PROJECT_ID);
   form.append("image", buffer, { filename, contentType: mimetype });
 
-  const res = await fetch(`${CDN_BASE}?action=upload`, {
-    method: "POST",
-    headers: { "X-API-Key": API_KEY, ...form.getHeaders() },
-    body: form,
+  return new Promise((resolve, reject) => {
+    const https = require("https");
+    const http = require("http");
+    const url = new URL(`${CDN_BASE}?action=upload`);
+
+    form.submit({
+      protocol: url.protocol,
+      host: url.hostname,
+      path: url.pathname + url.search,
+      headers: { "X-API-Key": API_KEY },
+    }, (err, res) => {
+      if (err) return reject(err);
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => {
+        try {
+          const data = JSON.parse(body);
+          if (!data.success) return reject(new Error(data.error || "CDN upload failed"));
+          resolve(data.image);
+        } catch (e) {
+          reject(new Error(`CDN parse error: ${body.substring(0, 200)}`));
+        }
+      });
+    });
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || "CDN upload failed");
-  return data.image;
 }
 
 async function uploadFromDataUrl(dataUrl, filename) {
@@ -28,6 +46,7 @@ async function uploadFromDataUrl(dataUrl, filename) {
 }
 
 async function deleteImage(id) {
+  if (!/^\d+$/.test(String(id))) return false;
   const res = await fetch(`${CDN_BASE}?action=delete&id=${id}`, {
     method: "DELETE",
     headers: { "X-API-Key": API_KEY },
@@ -44,7 +63,10 @@ function getServeUrl(id, w, h, fit = "cover") {
 }
 
 async function processImages(imagesJson) {
-  if (!API_KEY) return imagesJson;
+  if (!API_KEY) {
+    console.warn("STARKCDN_API_KEY not set, skipping CDN upload");
+    return imagesJson;
+  }
   let images;
   try {
     images = typeof imagesJson === "string" ? JSON.parse(imagesJson || "[]") : (imagesJson || []);
@@ -63,6 +85,7 @@ async function processImages(imagesJson) {
           width: result.width,
           height: result.height,
         };
+        console.log(`CDN uploaded: ${filename} -> ${result.url}`);
       } catch (e) {
         console.error("CDN upload error:", e.message);
       }
