@@ -1,165 +1,142 @@
 # Glass Keep
 
-Keep tarzı not uygulaması - Markdown, yapılacaklar listesi, görseller, etiketler, renk temaları, karanlık mod, sürükle-bırak, içe/dışa aktarma, kimlik doğrulama, gerçek zamanlı işbirliği ve cam efektli UI. Vite + React + Turso (cloud SQLite) + StarkCDN görsel depolama.
+Modern not uygulaması. Markdown, yapılacaklar listesi, görseller, etiketler, renk temaları, karanlık mod, sürükle-bırak, içe/dışa aktarma, kimlik doğrulama ve gerçek zamanlı işbirliği.
+
+**Teknoloji:** React 19, Vite 7, Express, Turso (cloud SQLite), StarkCDN (görsel depolama), Tailwind CSS 4
 
 ---
 
-## ✨ Özellikler
+## Ozellikler
 
-- **Kimlik Doğrulama & Çok Kullanıcı**
-  - Kayıt, Giriş (kullanıcı adı + şifre), Çıkış
-  - Rastgele oluşturulan admin şifresi (ilk kurulumda konsolda gösterilir)
-  - Gizli kurtarma anahtarı indirme + Gizli Anahtar ile giriş
-  - Her kullanıcı sadece kendi notlarını görür
+**Kimlik Dogrulama**
+- Kayit, giris, cikis
+- Gizli kurtarma anahtari ile giris
+- Rastgele olusturulan admin sifresi (ilk kurulumda konsolda gosterilir)
+- Kullanici bazli not erisimi
 
-- **Yapay Zeka Asistanı (Llama 3.2)**
-  - Sunucu tarafında çalışan, tamamen özel AI
-  - Notlarınızı okuyarak sorularınızı yanıtlar
-  - Akıllı arama - notlarınız arasında anlam bazlı arama
+**Yapay Zeka Asistani (Llama 3.2)**
+- Sunucu tarafinda calisan, tamamen ozel AI
+- Notlarinizi okuyarak sorularinizi yanitlar
+- Akilli arama - notlariniz arasinda anlam bazli arama
 
-- **Gerçek Zamanlı İşbirliği**
-  - Çoklu kullanıcı aynı anda not düzenleyebilir
-  - Kullanıcı adı/e-posta ile işbirlikçi ekleme/çıkarma
-  - Otomatik çakışma çözümleme
-  - Salt okunur mod desteği
+**Gercek Zamanli Isbirligi**
+- Coklu kullanici ayni anda not duzenleyebilir
+- Kullanici adi/e-posta ile isbirlikci ekleme/cikarma
+- Otomatik cakisma cozumleme
+- Salt okunur mod desteği
 
-- **Yönetim Paneli**
-  - Kullanıcı oluşturma, düzenleme, silme
-  - Yeni hesap oluşturmayı açma/kapama
-  - Kullanıcı bazlı depolama ve not istatistikleri
+**Yonetim Paneli**
+- Kullanici olusturma, duzenleme, silme
+- Yeni hesap olusturmayi acma/kapama
+- Kullanici bazli depolama ve not istatistikleri
 
-- **Notlar**
-  - Markdown destekli metin notları (H1-H3, bold, italic, code, link)
-  - Yapılacaklar listesi (sürükle-bırak sıralama)
-  - Çizim/notlar (serbest çizim, özelleştirilebilir fırça)
-  - Akıllı Enter - listeleri otomatik devam ettirir
-  - Biçimlendirme araç çubuğu
+**Not Turleri**
+- Markdown destekli metin notlari (H1-H3, bold, italic, code, link)
+- Yapilacaklar listesi (surukle-birak siralama)
+- Cizim notlari (serbest cizim, ozellestirilebilir firca)
+- Akilli Enter - listeleri otomatik devam ettirir
 
-- **Görseller**
-  - Çoklu görsel ekleme (istemci tarafı sıkıştırma)
-  - StarkCDN bulut depolama
-  - Tam ekran görüntüleyici (indirme, önceki/sonraki)
+**Gorseller**
+- Coklu gorsel ekleme (istemci tarafinda sicistirma)
+- StarkCDN bulut depolama
+- Tam ekran goruntulleyici (indirme, onceki/sonraki)
 
-- **Organizasyon**
-  - Sabitle / Sabitlemekten vazgeç
-  - Etiket çipleri (virgülle ekleme, hızlı ekleme/çıkarma)
-  - Etiket sidebar/drawer
-  - Not bazlı renk temaları
-  - Arama (başlık, markdown, etiketler, kontrol listesi, görsel adları)
-  - Sürükle-bırak sıralama
+**Organizasyon**
+- Sabitle / Sabitlemekten vazgec
+- Etiket cipleri (virgulle ekleme, hizli ekleme/cikarma)
+- Not bazli renk temalari
+- Arama (baslik, markdown, etiketler, kontrol listesi, Gorsel adlari)
+- Surukle-birak siralama
 
-- **Toplu İşlemler**
-  - Çoklu seçim: İndir, Sabitle, Sil, Renk Değiştir
+**Veri**
+- JSON olarak disa/ice aktarma
+- Google Keep'ten ice aktarma
+- Markdown dosyalarindan ice aktarma
+- Not bazli .md indirme
 
-- **Veri**
-  - JSON olarak dışa/içe aktarma
-  - Google Keep'ten içe aktarma
-  - Markdown dosyalarından içe aktarma
-  - Not bazlı .md indirme
+**PWA** - Masaustu ve mobilde kurulabilir
 
-- **PWA** - Masaüstü ve mobilde kurulabilir
-
-- **UI/Tema**
-  - Tailwind v4 + glassmorphism tasarım
-  - Karanlık/Aydınlık mod
-  - Responsive tasarım
+**Tema** - Tailwind v4 glassmorphism tasarim, karanlik/aydinlik mod, responsive
 
 ---
 
-## 🧰 Gereksinimler
-
-- **Node.js 20+** ve npm
-- **Turso** hesabı (ücretsiz) - bulut veritabanı
-- **StarkCDN** hesabı (opsiyonel) - görsel depolama
-
----
-
-## 📦 Proje Yapısı
+## Mimari
 
 ```
 .
-├─ public/                # PWA ikonları
-├─ src/                   # React uygulaması
-│  ├─ App.jsx            # Ana uygulama bileşeni
-│  ├─ DrawingCanvas.jsx  # Çizim bileşeni
-│  ├─ ai.js              # AI asistan modülü
-│  └─ main.jsx           # Giriş noktası
-├─ server/                # Express API
-│  ├─ index.js           # Ana sunucu dosyası
-│  ├─ db.js              # Turso veritabanı modülü
-│  └─ cdn.js             # StarkCDN görsel modülü
-├─ api/                   # Vercel serverless entry point
+├─ public/                 PWA ikonlari
+├─ src/                    React uygulamasi
+│  ├─ App.jsx             Ana uygulama bileseni
+│  ├─ DrawingCanvas.jsx   Cizim bileseni
+│  ├─ ai.js               AI asistan modulu
+│  └─ main.jsx            Giris noktasi
+├─ server/                 Express API
+│  ├─ index.js            Ana sunucu dosyasi
+│  ├─ db.js               Turso veritabani modulu
+│  └─ cdn.js              StarkCDN Gorsel modulu
+├─ api/                    Vercel serverless entry point
 │  └─ index.js
+├─ .github/workflows/      GitHub Actions CI
+│  └─ ci.yml
 ├─ index.html
 ├─ vite.config.js
-├─ vercel.json           # Vercel deploy yapılandırması
+├─ vercel.json             Vercel deploy yapilandirmasi
 └─ package.json
 ```
 
 ---
 
-## 🛠 Kurulum (Geliştirme)
+## Kurulum
 
-### 1) Ortam Değişkenleri
+### Ortam Degiskenleri
 
-```bash
-cp .env.example .env
-```
+Projede `.env` dosyasi olusturun:
 
-`.env` dosyasını düzenleyin:
 ```env
 JWT_SECRET=uzun-rastgele-bir-string-yazin
 TURSO_URL=libsql://your-db-name.turso.io
 TURSO_AUTH_TOKEN=your-turso-auth-token
 STARKCDN_API_KEY=your-starkcdn-api-key
-STARKCDN_PROJECT_ID=1
+STARKCDN_PROJECT_ID=8
 ```
 
-### 2) Bağımlılıkları yükleyin
+### Gelistirme
 
 ```bash
 npm install
-```
-
-### 3) Çalıştırın
-
-```bash
 npm run dev
 ```
 
-- Frontend (Vite): http://localhost:5173
-- API: http://localhost:8080
+Frontend: http://localhost:5173 | API: http://localhost:8080
 
-### 4) Turso Veritabanı Kurulumu
+### Turso Veritabani
 
-1. [turso.tech](https://turso.tech) adresinden ücretsiz hesap oluşturun
-2. Yeni bir veritabanı oluşturun
-3. URL ve Auth Token'ı `.env` dosyasına ekleyin
-4. Tablolar otomatik oluşturulur
+1. [turso.tech](https://turso.tech) adresinden ucretsiz hesap olusturun
+2. Yeni bir veritabani olusturun
+3. URL ve Auth Token'i `.env` dosyasina ekleyin
+4. Tablolar otomatik olusturulur
 
 ---
 
-## 🚀 Vercel Deploy
+## Deploy
 
-### 1) Vercel'de import edin
-- [vercel.com](https://vercel.com) → New Project → `glass-keep-tr` reposunu seçin
+### Vercel
 
-### 2) Environment Variables ekleyin
+1. [vercel.com](https://vercel.com) adresinden New Project olusturun
+2. `glass-keep-tr` reposunu secin
+3. Environment Variables ekleyin:
+
 ```
 JWT_SECRET=uzun-rastgele-string
 TURSO_URL=libsql://your-db.turso.io
 TURSO_AUTH_TOKEN=your-token
 STARKCDN_API_KEY=your-key
-STARKCDN_PROJECT_ID=1
+STARKCDN_PROJECT_ID=8
 ```
 
-### 3) Deploy!
-- Frontend statik olarak sunulur
-- API serverless fonksiyon olarak çalışır
+4. Deploy edin
 
----
-
-## 🐳 Docker Deploy
+### Docker
 
 ```bash
 docker build -t glass-keep .
@@ -172,35 +149,37 @@ docker run -d \
   -e TURSO_URL="libsql://your-db.turso.io" \
   -e TURSO_AUTH_TOKEN="your-token" \
   -e STARKCDN_API_KEY="your-key" \
-  -e STARKCDN_PROJECT_ID="1" \
+  -e STARKCDN_PROJECT_ID="8" \
   glass-keep
 ```
 
 ---
 
-## 🧭 Yönetim Paneli
+## Yonetim Paneli
 
-- **Erişim**: http://localhost:5173/#/admin (geliştirme) veya http://localhost:8080/#/admin (production)
-- **Kimler erişebilir**: `is_admin = 1` olan kullanıcılar
-- **İlk giriş**: Sunucu ilk başladığında konsolda admin şifresi gösterilir
+- **Gelistirme:** http://localhost:5173/#/admin
+- **Production:** http://localhost:8080/#/admin
+- **Erisim:** `is_admin = 1` olan kullanicilar
+- **Ilk giris:** Sunucu ilk basladiginda konsolda admin sifresi gosterilir
 
 ---
 
-## 🔐 Güvenlik
+## Guvenlik
 
 - JWT Secret zorunlu (hardcoded fallback yok)
-- bcrypt ile şifre hashleme (async)
+- bcrypt ile sifre hashleme (async)
 - Rate limiting: Auth endpoint'leri (20/15dk), AI endpoint'i (10/dk)
-- DOMPurify ile XSS koruması (markdown rendering)
-- Helmet.js security header'ları
+- DOMPurify ile XSS korumasi (markdown rendering)
+- Helmet.js security header'lari (HSTS, X-Frame-Options, vb.)
 - CORS allowlist (origin reflection yok)
-- Görsel depolama StarkCDN üzerinden (base64 DB'de tutulmuyor)
+- Gorsel depolama StarkCDN uzerinden (base64 DB'de tutulmuyor)
 - Input uzunluk validasyonu
-- `is_admin` strict boolean kontrolü
-- Güvenli ID üretimi (crypto.randomUUID)
+- `is_admin` strict boolean kontrolu
+- Guvenli ID uretimi (crypto.randomUUID)
+- Content Security Policy
 
 ---
 
-## 📝 Lisans
+## Lisans
 
 MIT
