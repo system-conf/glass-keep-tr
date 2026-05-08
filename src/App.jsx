@@ -60,7 +60,7 @@ async function api(path, { method = "GET", body, token } = {}) {
       // Dispatch a custom event so the app can handle it
       window.dispatchEvent(new CustomEvent('auth-expired'));
 
-      const err = new Error(data?.error || "Session expired. Please log in again.");
+      const err = new Error(data?.error || "Oturum süresi doldu. Lütfen tekrar giriş yapın.");
       err.status = res.status;
       err.isAuthError = true;
       throw err;
@@ -75,7 +75,7 @@ async function api(path, { method = "GET", body, token } = {}) {
   } catch (error) {
     // Handle network errors, timeouts, etc.
     if (error.name === 'AbortError') {
-      const err = new Error("Request timeout. Please check your connection.");
+      const err = new Error("İstek zaman aşımı. Lütfen bağlantınızı kontrol edin.");
       err.status = 408;
       err.isNetworkError = true;
       throw err;
@@ -88,7 +88,7 @@ async function api(path, { method = "GET", body, token } = {}) {
 
     // Handle fetch failures (network errors, CORS, etc.)
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      const err = new Error("Network error. Please check your connection.");
+      const err = new Error("Ağ hatası. Lütfen bağlantınızı kontrol edin.");
       err.status = 0;
       err.isNetworkError = true;
       throw err;
@@ -733,14 +733,14 @@ function ChecklistRow({
           className={`flex-1 bg-transparent text-sm focus:outline-none border-b border-transparent focus:border-[var(--border-light)] pb-0.5 ${item.done ? "line-through text-gray-500 dark:text-gray-400" : ""}`}
           value={item.text}
           onChange={(e) => onChange?.(e.target.value)}
-          placeholder="List item"
+          placeholder="Liste öğesi"
         />
       )}
 
       {(showRemove || !readOnly) && (
         <button
           className={`${removeVisibility} transition-opacity text-gray-500 hover:text-red-600 rounded-full border border-[var(--border-light)] flex items-center justify-center ${removeSize}`}
-          title="Remove item"
+          title="Öğeyi kaldır"
           onClick={onRemove}
         >
           ×
@@ -1236,7 +1236,7 @@ function NoteCard({
         <div className="absolute bottom-3 right-3 z-10">
           <div
             className="relative"
-            title="Collaborated note"
+            title="İşbirlikli not"
           >
             <svg className="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
@@ -1254,10 +1254,10 @@ function NoteCard({
             style={{ backgroundColor: bgFor(n.color, dark) }}
           />
           <button
-            aria-label={n.pinned ? "Unpin note" : "Pin note"}
+            aria-label={n.pinned ? "Sabitlemekten vazgeç" : "Sabitle"}
             onClick={(e) => { if (disablePin) return; e.stopPropagation(); togglePin(n.id, !n.pinned); }}
             className="relative rounded-full p-2 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            title={n.pinned ? "Unpin" : "Pin"}
+            title={n.pinned ? "Sabitlemekten vazgeç" : "Sabitle"}
             disabled={!!disablePin}
           >
             {n.pinned ? <PinFilled /> : <PinOutline />}
@@ -1341,7 +1341,7 @@ function AuthShell({ title, dark, onToggleDark, children }) {
           <button
             onClick={onToggleDark}
             className={`inline-flex items-center gap-2 text-sm ${dark ? "text-gray-300" : "text-gray-700"} hover:underline`}
-            title="Toggle dark mode"
+            title="Karanlık modu aç/kapat"
           >
             {dark ? <Moon /> : <Sun />} Toggle theme
           </button>
@@ -1361,20 +1361,20 @@ function LoginView({ dark, onToggleDark, onLogin, goRegister, goSecret, allowReg
     e.preventDefault();
     try {
       const res = await onLogin(email.trim(), pw);
-      if (!res.ok) setErr(res.error || "Login failed");
+      if (!res.ok) setErr(res.error || "Giriş başarısız");
     } catch (er) {
-      setErr(er.message || "Login failed");
+      setErr(er.message || "Giriş başarısız");
     }
   };
 
   return (
-    <AuthShell title="Sign in to your account" dark={dark} onToggleDark={onToggleDark}>
+    <AuthShell title="Hesabınıza giriş yapın" dark={dark} onToggleDark={onToggleDark}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           autoComplete="username"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Username"
+          placeholder="Kullanıcı adı"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -1382,25 +1382,25 @@ function LoginView({ dark, onToggleDark, onLogin, goRegister, goSecret, allowReg
         <input
           type="password"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Password"
+          placeholder="Şifre"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
           required
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button type="submit" className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-          Sign In
+          Giriş Yap
         </button>
       </form>
 
       <div className="mt-4 text-sm flex justify-between items-center">
         {allowRegistration && (
           <button className="text-indigo-600 hover:underline" onClick={goRegister}>
-            Create account
+            Hesap oluştur
           </button>
         )}
         <button className="text-indigo-600 hover:underline" onClick={goSecret}>
-          Forgot username/password?
+          Kullanıcı adı/şifremi unuttum
         </button>
       </div>
     </AuthShell>
@@ -1416,23 +1416,23 @@ function RegisterView({ dark, onToggleDark, onRegister, goLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (pw.length < 6) return setErr("Password must be at least 6 characters.");
-    if (pw !== pw2) return setErr("Passwords do not match.");
+    if (pw.length < 6) return setErr("Şifre en az 6 karakter olmalıdır.");
+    if (pw !== pw2) return setErr("Şifreler eşleşmiyor.");
     try {
-      const res = await onRegister(name.trim() || "User", email.trim(), pw);
-      if (!res.ok) setErr(res.error || "Registration failed");
+      const res = await onRegister(name.trim() || "Kullanıcı", email.trim(), pw);
+      if (!res.ok) setErr(res.error || "Kayıt başarısız");
     } catch (er) {
-      setErr(er.message || "Registration failed");
+      setErr(er.message || "Kayıt başarısız");
     }
   };
 
   return (
-    <AuthShell title="Create a new account" dark={dark} onToggleDark={onToggleDark}>
+    <AuthShell title="Yeni hesap oluşturun" dark={dark} onToggleDark={onToggleDark}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Name"
+          placeholder="İsim"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -1440,7 +1440,7 @@ function RegisterView({ dark, onToggleDark, onRegister, goLogin }) {
           type="text"
           autoComplete="username"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Username"
+          placeholder="Kullanıcı adı"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -1448,7 +1448,7 @@ function RegisterView({ dark, onToggleDark, onRegister, goLogin }) {
         <input
           type="password"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Password (min 6 chars)"
+          placeholder="Şifre (en az 6 karakter)"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
           required
@@ -1456,20 +1456,20 @@ function RegisterView({ dark, onToggleDark, onRegister, goLogin }) {
         <input
           type="password"
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Confirm password"
+          placeholder="Şifre tekrar"
           value={pw2}
           onChange={(e) => setPw2(e.target.value)}
           required
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button type="submit" className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-          Create Account
+          Hesap Oluştur
         </button>
       </form>
       <div className="mt-4 text-sm text-center">
-        Already have an account?{" "}
+        Zaten hesabınız var mı?{" "}
         <button className="text-indigo-600 hover:underline" onClick={goLogin}>
-          Sign in
+          Giriş yap
         </button>
       </div>
     </AuthShell>
@@ -1484,31 +1484,31 @@ function SecretLoginView({ dark, onToggleDark, onLoginWithKey, goLogin }) {
     e.preventDefault();
     try {
       const res = await onLoginWithKey(key.trim());
-      if (!res.ok) setErr(res.error || "Login failed");
+      if (!res.ok) setErr(res.error || "Giriş başarısız");
     } catch (er) {
-      setErr(er.message || "Login failed");
+      setErr(er.message || "Giriş başarısız");
     }
   };
 
   return (
-    <AuthShell title="Sign in with Secret Key" dark={dark} onToggleDark={onToggleDark}>
+    <AuthShell title="Gizli Anahtar ile giriş yapın" dark={dark} onToggleDark={onToggleDark}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           className="w-full bg-transparent border border-[var(--border-light)] rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          placeholder="Paste your secret key here"
+          placeholder="Gizli anahtarınızı buraya yapıştırın"
           value={key}
           onChange={(e) => setKey(e.target.value)}
           required
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button type="submit" className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-          Sign In with Secret Key
+          Gizli Anahtar ile Giriş Yap
         </button>
       </form>
       <div className="mt-4 text-sm text-center">
-        Remember your credentials?{" "}
+        Bilgilerinizi hatırlıyor musunuz?{" "}
         <button className="text-indigo-600 hover:underline" onClick={goLogin}>
-          Sign in with email & password
+          E-posta ve şifre ile giriş yap
         </button>
       </div>
     </AuthShell>
@@ -1538,12 +1538,12 @@ function TagSidebar({ open, onClose, tagsWithCounts, activeTag, onSelect, dark, 
         aria-hidden={!(permanent || open)}
       >
         <div className="p-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Tags</h3>
+          <h3 className="text-lg font-semibold">Etiketler</h3>
           {!permanent && (
             <button
               className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
               onClick={onClose}
-              title="Close"
+              title="Kapat"
             >
               <CloseIcon />
             </button>
@@ -1555,7 +1555,7 @@ function TagSidebar({ open, onClose, tagsWithCounts, activeTag, onSelect, dark, 
             className={`w-full text-left px-3 py-2 rounded-md mb-1 ${isAllNotes ? (dark ? "bg-white/10" : "bg-black/5") : (dark ? "hover:bg-white/10" : "hover:bg-black/5")}`}
             onClick={() => { onSelect(null); onClose(); }}
           >
-            Notes (All)
+            Notlar (Tümü)
           </button>
 
           {/* All Images */}
@@ -1563,7 +1563,7 @@ function TagSidebar({ open, onClose, tagsWithCounts, activeTag, onSelect, dark, 
             className={`w-full text-left px-3 py-2 rounded-md mb-2 ${isAllImages ? (dark ? "bg-white/10" : "bg-black/5") : (dark ? "hover:bg-white/10" : "hover:bg-black/5")}`}
             onClick={() => { onSelect(ALL_IMAGES); onClose(); }}
           >
-            All Images
+            Tüm Resimler
           </button>
 
           {/* Archived Notes */}
@@ -1571,7 +1571,7 @@ function TagSidebar({ open, onClose, tagsWithCounts, activeTag, onSelect, dark, 
             className={`w-full text-left px-3 py-2 rounded-md mb-2 ${activeTag === 'ARCHIVED' ? (dark ? "bg-white/10" : "bg-black/5") : (dark ? "hover:bg-white/10" : "hover:bg-black/5")}`}
             onClick={() => { onSelect('ARCHIVED'); onClose(); }}
           >
-            Archived Notes
+            Arşivlenmiş Notlar
           </button>
 
           {/* User tags */}
@@ -1591,7 +1591,7 @@ function TagSidebar({ open, onClose, tagsWithCounts, activeTag, onSelect, dark, 
             );
           })}
           {tagsWithCounts.length === 0 && (
-            <p className="text-sm text-gray-500 mt-2">No tags yet. Add tags to your notes!</p>
+            <p className="text-sm text-gray-500 mt-2">Henüz etiket yok. Notlarınıza etiket ekleyin!</p>
           )}
         </nav>
 
@@ -1659,12 +1659,12 @@ function SettingsPanel({ open, onClose, dark, onExportAll, onImportAll, onImport
         <div className="p-4 flex items-center justify-between border-b border-[var(--border-light)]">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <SettingsIcon />
-            Settings
+            Ayarlar
           </h3>
           <button
             className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
             onClick={onClose}
-            title="Close"
+            title="Kapat"
           >
             <CloseIcon />
           </button>
@@ -1673,58 +1673,58 @@ function SettingsPanel({ open, onClose, dark, onExportAll, onImportAll, onImport
         <div className="p-4 overflow-y-auto h-[calc(100%-64px)]">
           {/* Data Management Section */}
           <div className="mb-8">
-            <h4 className="text-md font-semibold mb-4">Data Management</h4>
+            <h4 className="text-md font-semibold mb-4">Veri Yönetimi</h4>
             <div className="space-y-3">
               <button
                 className={`block w-full text-left px-4 py-3 border border-[var(--border-light)] rounded-lg ${dark ? "hover:bg-white/10" : "hover:bg-gray-50"} transition-colors`}
                 onClick={() => { onClose(); onExportAll?.(); }}
               >
-                <div className="font-medium">Export ALL notes (.json)</div>
-                <div className="text-sm text-gray-500">Download all notes as JSON file</div>
+                <div className="font-medium">Tüm notları dışa aktar (.json)</div>
+                <div className="text-sm text-gray-500">Tüm notları JSON dosyası olarak indir</div>
               </button>
 
               <button
                 className={`block w-full text-left px-4 py-3 border border-[var(--border-light)] rounded-lg ${dark ? "hover:bg-white/10" : "hover:bg-gray-50"} transition-colors`}
                 onClick={() => { onClose(); onImportAll?.(); }}
               >
-                <div className="font-medium">Import notes (.json)</div>
-                <div className="text-sm text-gray-500">Import notes from JSON file</div>
+                <div className="font-medium">Notları içe aktar (.json)</div>
+                <div className="text-sm text-gray-500">JSON dosyasından notları içe aktar</div>
               </button>
 
               <button
                 className={`block w-full text-left px-4 py-3 border border-[var(--border-light)] rounded-lg ${dark ? "hover:bg-white/10" : "hover:bg-gray-50"} transition-colors`}
                 onClick={() => { onClose(); onImportGKeep?.(); }}
               >
-                <div className="font-medium">Import Google Keep notes (.json)</div>
-                <div className="text-sm text-gray-500">Import notes from Google Keep JSON export</div>
+                <div className="font-medium">Google Keep notlarını içe aktar (.json)</div>
+                <div className="text-sm text-gray-500">Google Keep JSON dışa aktarmasından notları içe aktar</div>
               </button>
 
               <button
                 className={`block w-full text-left px-4 py-3 border border-[var(--border-light)] rounded-lg ${dark ? "hover:bg-white/10" : "hover:bg-gray-50"} transition-colors`}
                 onClick={() => { onClose(); onImportMd?.(); }}
               >
-                <div className="font-medium">Import Markdown files (.md)</div>
-                <div className="text-sm text-gray-500">Import notes from Markdown files</div>
+                <div className="font-medium">Markdown dosyalarını içe aktar (.md)</div>
+                <div className="text-sm text-gray-500">Markdown dosyalarından notları içe aktar</div>
               </button>
 
               <button
                 className={`block w-full text-left px-4 py-3 border border-[var(--border-light)] rounded-lg ${dark ? "hover:bg-white/10" : "hover:bg-gray-50"} transition-colors`}
                 onClick={() => { onClose(); onDownloadSecretKey?.(); }}
               >
-                <div className="font-medium">Download secret key (.txt)</div>
-                <div className="text-sm text-gray-500">Download your encryption key for backup</div>
+                <div className="font-medium">Gizli anahtarı indir (.txt)</div>
+                <div className="text-sm text-gray-500">Yedekleme için şifreleme anahtarınızı indirin</div>
               </button>
             </div>
           </div>
 
           {/* UI Preferences Section */}
           <div className="mb-8">
-            <h4 className="text-md font-semibold mb-4">UI Preferences</h4>
+            <h4 className="text-md font-semibold mb-4">Arayüz Tercihleri</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Local AI Assistant</div>
-                  <div className="text-sm text-gray-500">Ask questions about your notes (server-side model)</div>
+                  <div className="font-medium">Yerel AI Asistanı</div>
+                  <div className="text-sm text-gray-500">Notlarınız hakkında soru sorun (sunucu tarafında model)</div>
                 </div>
                 <button
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localAiEnabled
@@ -1735,20 +1735,20 @@ function SettingsPanel({ open, onClose, dark, onExportAll, onImportAll, onImport
                     if (!localAiEnabled) {
                       // Show confirmation dialog when enabling
                       showGenericConfirm({
-                        title: "Enable AI Assistant?",
-                        message: "This will download a ~700MB AI model (Llama-3.2-1B) to the server and may use significant CPU resources. The download will happen in the background. Continue?",
-                        confirmText: "Enable AI",
-                        cancelText: "Cancel",
+                        title: "AI Asistanı Etkinleştirilsin mi?",
+                        message: "Bu, sunucuya ~700MB'lık bir AI modeli (Llama-3.2-1B) indirecek ve önemli CPU kaynağı kullanabilir. İndirme arka planda gerçekleşecektir. Devam edilsin mi?",
+                        confirmText: "AI'ı Etkinleştir",
+                        cancelText: "İptal",
                         danger: false,
                         onConfirm: async () => {
                           setLocalAiEnabled(true);
-                          showToast("AI Assistant enabled. Model will download on first use.", "success");
+                          showToast("AI Asistanı etkinleştirildi. Model ilk kullanımda indirilecek.", "success");
                         }
                       });
                     } else {
                       // Disable without confirmation
                       setLocalAiEnabled(false);
-                      showToast("AI Assistant disabled", "info");
+                      showToast("AI Asistanı devre dışı bırakıldı", "info");
                     }
                   }}
                 >
@@ -1798,14 +1798,14 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
   const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!newUserForm.name || !newUserForm.email || !newUserForm.password) {
-      showToast("Please fill in all required fields", "error");
+      showToast("Lütfen tüm zorunlu alanları doldurun", "error");
       return;
     }
 
     setIsCreatingUser(true);
     try {
       await createUser(newUserForm);
-      showToast("User created successfully!", "success");
+      showToast("Kullanıcı başarıyla oluşturuldu!", "success");
     } catch (e) {
       // Error already handled in createUser function
     } finally {
@@ -1827,7 +1827,7 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     if (!editUserForm.name || !editUserForm.email) {
-      showToast("Name and email are required", "error");
+      showToast("İsim ve e-posta gereklidir", "error");
       return;
     }
 
@@ -1844,11 +1844,11 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
       }
 
       await updateUser(editingUser.id, updateData);
-      showToast("User updated successfully!", "success");
+      showToast("Kullanıcı başarıyla güncellenendi!", "success");
       setEditUserModalOpen(false);
       setEditingUser(null);
     } catch (e) {
-      showToast(e.message || "Failed to update user", "error");
+      showToast(e.message || "Kullanıcı güncellenemedi", "error");
     } finally {
       setIsUpdatingUser(false);
     }
@@ -1889,11 +1889,11 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
         aria-hidden={!open}
       >
         <div className="p-4 flex items-center justify-between border-b border-[var(--border-light)]">
-          <h3 className="text-lg font-semibold">Admin Panel</h3>
+          <h3 className="text-lg font-semibold">Yönetim Paneli</h3>
           <button
             className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
             onClick={onClose}
-            title="Close"
+            title="Kapat"
           >
             <CloseIcon />
           </button>
@@ -1902,10 +1902,10 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
         <div className="p-4 overflow-y-auto h-[calc(100%-64px)]">
           {/* Settings Section */}
           <div className="mb-8">
-            <h4 className="text-md font-semibold mb-4">Settings</h4>
+            <h4 className="text-md font-semibold mb-4">Ayarlar</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Allow New Account Creation</span>
+                <span className="text-sm">Yeni Hesap Oluşturmaya İzin Ver</span>
                 <button
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${adminSettings.allowNewAccounts
                     ? 'bg-indigo-600'
@@ -1924,25 +1924,25 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
 
           {/* Create User Section */}
           <div className="mb-8">
-            <h4 className="text-md font-semibold mb-4">Create New User</h4>
+            <h4 className="text-md font-semibold mb-4">Yeni Kullanıcı Oluştur</h4>
             <form onSubmit={handleCreateUser} className="space-y-3">
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="İsim"
                 value={newUserForm.name}
                 onChange={(e) => setNewUserForm(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-3 py-2 border border-[var(--border-light)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500 dark:placeholder-gray-400"
               />
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="E-posta"
                 value={newUserForm.email}
                 onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
                 className="w-full px-3 py-2 border border-[var(--border-light)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500 dark:placeholder-gray-400"
               />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Şifre"
                 value={newUserForm.password}
                 onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
                 className="w-full px-3 py-2 border border-[var(--border-light)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500 dark:placeholder-gray-400"
@@ -1955,21 +1955,21 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                   onChange={(e) => setNewUserForm(prev => ({ ...prev, is_admin: e.target.checked }))}
                   className="mr-2"
                 />
-                <label htmlFor="is_admin" className="text-sm">Make admin</label>
+                <label htmlFor="is_admin" className="text-sm">Yönetici yap</label>
               </div>
               <button
                 type="submit"
                 disabled={isCreatingUser}
                 className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
-                {isCreatingUser ? "Creating..." : "Create User"}
+                {isCreatingUser ? "Oluşturuluyor..." : "Kullanıcı Oluştur"}
               </button>
             </form>
           </div>
 
           {/* Users List Section */}
           <div>
-            <h4 className="text-md font-semibold mb-4">All Users ({allUsers.length})</h4>
+            <h4 className="text-md font-semibold mb-4">Tüm Kullanıcılar ({allUsers.length})</h4>
             <div className="space-y-3">
               {allUsers.map((user) => (
                 <div key={user.id} className="p-3 border border-[var(--border-light)] rounded-lg">
@@ -1988,30 +1988,30 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                         onClick={() => openEditUserModal(user)}
                         className="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
                       >
-                        Edit
+                        Düzenle
                       </button>
                       {user.id !== currentUser?.id && (
                         <button
                           onClick={() => {
                             showGenericConfirm({
-                              title: "Delete User",
-                              message: `Are you sure you want to delete ${user.name}?`,
-                              confirmText: "Delete",
+                              title: "Kullanıcıyı Sil",
+                              message: `${user.name} kullanıcısını silmek istediğinize emin misiniz?`,
+                              confirmText: "Sil",
                               danger: true,
                               onConfirm: () => deleteUser(user.id)
                             });
                           }}
                           className="px-2 py-1 text-xs bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded hover:bg-red-200 dark:hover:bg-red-800"
                         >
-                          Delete
+                          Sil
                         </button>
                       )}
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 space-y-1">
-                    <div>Notes: {user.notes}</div>
-                    <div>Storage: {formatBytes(user.storage_bytes ?? 0)}</div>
-                    <div>Joined: {new Date(user.created_at).toLocaleDateString()}</div>
+                    <div>Notlar: {user.notes}</div>
+                    <div>Depolama: {formatBytes(user.storage_bytes ?? 0)}</div>
+                    <div>Katılım: {new Date(user.created_at).toLocaleDateString()}</div>
                   </div>
                 </div>
               ))}
@@ -2024,10 +2024,10 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
       {editUserModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+            <h3 className="text-lg font-semibold mb-4">Kullanıcıyı Düzenle</h3>
             <form onSubmit={handleUpdateUser} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
+                <label className="block text-sm font-medium mb-1">İsim</label>
                 <input
                   type="text"
                   value={editUserForm.name}
@@ -2037,7 +2037,7 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Username</label>
+                <label className="block text-sm font-medium mb-1">E-posta</label>
                 <input
                   type="text"
                   value={editUserForm.email}
@@ -2047,13 +2047,13 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Password (leave empty to keep current)</label>
+                <label className="block text-sm font-medium mb-1">Şifre (değiştirmemek için boş bırakın)</label>
                 <input
                   type="password"
                   value={editUserForm.password}
                   onChange={(e) => setEditUserForm(prev => ({ ...prev, password: e.target.value }))}
                   className="w-full px-3 py-2 border border-[var(--border-light)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="Leave empty to keep current password"
+                  placeholder="Mevcut şifreyi korumak için boş bırakın"
                 />
               </div>
               <div className="flex items-center">
@@ -2064,7 +2064,7 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                   onChange={(e) => setEditUserForm(prev => ({ ...prev, is_admin: e.target.checked }))}
                   className="mr-2"
                 />
-                <label htmlFor="edit_is_admin" className="text-sm">Make admin</label>
+                <label htmlFor="edit_is_admin" className="text-sm">Yönetici yap</label>
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button
@@ -2072,14 +2072,14 @@ function AdminPanel({ open, onClose, dark, adminSettings, allUsers, newUserForm,
                   onClick={() => setEditUserModalOpen(false)}
                   className="px-4 py-2 border border-[var(--border-light)] rounded-lg hover:bg-black/5 dark:hover:bg-white/10"
                 >
-                  Cancel
+                  İptal
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingUser}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  {isUpdatingUser ? "Updating..." : "Update User"}
+                  {isUpdatingUser ? "Güncelleniyor..." : "Kullanıcıyı Güncelle"}
                 </button>
               </div>
             </form>
@@ -2163,8 +2163,8 @@ function NotesUI({
   const multiColorBtnRef = useRef(null);
   const [showMultiColorPop, setShowMultiColorPop] = useState(false);
   const tagLabel =
-    activeTagFilter === ALL_IMAGES ? "All Images" :
-      activeTagFilter === 'ARCHIVED' ? "Archived Notes" :
+    activeTagFilter === ALL_IMAGES ? "Tüm Resimler" :
+      activeTagFilter === 'ARCHIVED' ? "Arşivlenmiş Notlar" :
         activeTagFilter;
 
   // Close header menu when scrolling
@@ -2202,7 +2202,7 @@ function NotesUI({
               type="button"
               onClick={() => setShowMultiColorPop((v) => !v)}
               className="px-3 py-1.5 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 text-sm"
-              title="Color"
+              title="Renk"
             >
               🎨 Color
             </button>
@@ -2233,13 +2233,13 @@ function NotesUI({
             )}
             <button className="px-3 py-1.5 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 text-sm flex items-center gap-1" onClick={onBulkArchive}>
               <ArchiveIcon />
-              {activeTagFilter === 'ARCHIVED' ? 'Unarchive' : 'Archive'}
+              {activeTagFilter === 'ARCHIVED' ? 'Arşivden Çıkar' : 'Arşivle'}
             </button>
             <span className="text-xs opacity-70 ml-2">Selected: {selectedIds.length}</span>
           </div>
           <button
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-            title="Exit multi-select"
+            title="Çoklu seçimden çık"
             onClick={onExitMulti}
           >
             <CloseIcon />
@@ -2255,8 +2255,8 @@ function NotesUI({
             <button
               onClick={openSidebar}
               className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              title="Open tags"
-              aria-label="Open tags"
+              title="Etiketleri aç"
+              aria-label="Etiketleri aç"
             >
               <Hamburger />
             </button>
@@ -2266,7 +2266,7 @@ function NotesUI({
           <img
             src="/favicon-32x32.png"
             srcSet="/pwa-192.png 2x, /pwa-512.png 3x"
-            alt="Glass Keep logo"
+            alt="Glass Keep logosu"
             className="h-7 w-7 rounded-xl shadow-sm select-none pointer-events-none"
             draggable="false"
           />
@@ -2274,7 +2274,7 @@ function NotesUI({
           <h1 className="hidden sm:block text-2xl sm:text-3xl font-bold">Glass Keep</h1>
           {activeTagFilter && (
             <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-indigo-600/10 text-indigo-700 dark:text-indigo-300 border border-indigo-600/20">
-              {tagLabel === "All Images" || tagLabel === "Archived Notes" ? tagLabel : `Tag: ${tagLabel}`}
+              {tagLabel === "Tüm Resimler" || tagLabel === "Arşivlenmiş Notlar" ? tagLabel : `Etiket: ${tagLabel}`}
             </span>
           )}
 
@@ -2290,7 +2290,7 @@ function NotesUI({
           <div className="relative w-full max-w-lg">
             <input
               type="text"
-              placeholder={localAiEnabled ? "Search or Ask AI..." : "Search..."}
+              placeholder={localAiEnabled ? "Ara veya Sor..." : "Ara..."}
               className={`w-full bg-transparent border border-[var(--border-light)] rounded-lg pl-4 ${localAiEnabled ? 'pr-14' : 'pr-8'} py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500 dark:placeholder-gray-400`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -2304,7 +2304,7 @@ function NotesUI({
               {localAiEnabled && search.trim().length > 0 && (
                 <button
                   type="button"
-                  title="Ask AI"
+                  title="AI'a Sor"
                   className="h-7 w-7 rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600/10 transition-colors"
                   onClick={() => onAiSearch?.(search)}
                 >
@@ -2314,7 +2314,7 @@ function NotesUI({
               {search && (
                 <button
                   type="button"
-                  aria-label="Clear search"
+                  aria-label="Aramayı temizle"
                   className="h-6 w-6 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
                   onClick={() => setSearch("")}
                 >
@@ -2335,7 +2335,7 @@ function NotesUI({
             ref={headerBtnRef}
             onClick={() => setHeaderMenuOpen((v) => !v)}
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-            title="Menu"
+            title="Menü"
             aria-haspopup="menu"
             aria-expanded={headerMenuOpen}
           >
@@ -2361,14 +2361,14 @@ function NotesUI({
                   onClick={() => { setHeaderMenuOpen(false); openSettingsPanel?.(); }}
                 >
                   <SettingsIcon />
-                  Settings
+                  Ayarlar
                 </button>
                 <button
                   className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${dark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
                   onClick={() => { setHeaderMenuOpen(false); onToggleViewMode?.(); }}
                 >
                   {listView ? <GridIcon /> : <ListIcon />}
-                  {listView ? "Grid View" : "List View"}
+                  {listView ? "Izgara Görünümü" : "Liste Görünümü"}
                 </button>
                 {/* Theme toggle text item */}
                 <button
@@ -2376,14 +2376,14 @@ function NotesUI({
                   onClick={() => { setHeaderMenuOpen(false); toggleDark?.(); }}
                 >
                   {dark ? <SunIcon /> : <MoonIcon />}
-                  {dark ? "Light Mode" : "Dark Mode"}
+                  {dark ? "Aydınlık Mod" : "Karanlık Mod"}
                 </button>
                 <button
                   className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm ${dark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
                   onClick={() => { setHeaderMenuOpen(false); onStartMulti?.(); }}
                 >
                   <CheckSquareIcon />
-                  Multi select
+                  Çoklu seçim
                 </button>
                 {currentUser?.is_admin && (
                   <button
@@ -2391,7 +2391,7 @@ function NotesUI({
                     onClick={() => { setHeaderMenuOpen(false); openAdminPanel?.(); }}
                   >
                     <ShieldIcon />
-                    Admin Panel
+                    Yönetim Paneli
                   </button>
                 )}
                 <button
@@ -2399,7 +2399,7 @@ function NotesUI({
                   onClick={() => { setHeaderMenuOpen(false); signOut?.(); }}
                 >
                   <LogOutIcon />
-                  Sign out
+                  Çıkış yap
                 </button>
               </div>
             </>
@@ -2465,7 +2465,7 @@ function NotesUI({
                 <button
                   onClick={() => { setAiResponse(null); setSearch(''); }}
                   className="ml-auto p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-                  title="Clear response"
+                  title="Yanıtı temizle"
                 >
                   <CloseIcon />
                 </button>
@@ -2516,7 +2516,7 @@ function NotesUI({
                     setComposerCollapsed(false);
                     setTimeout(() => titleRef.current?.focus(), 10);
                   }}
-                  placeholder="Write a note..."
+                  placeholder="Not yaz..."
                   className="w-full bg-transparent placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none p-2"
                 />
               ) : (
@@ -2526,7 +2526,7 @@ function NotesUI({
                     ref={titleRef}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title"
+                    placeholder="Başlık"
                     disabled={!isOnline}
                     className={`w-full bg-transparent text-lg font-semibold placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none mb-2 p-2 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
@@ -2539,7 +2539,7 @@ function NotesUI({
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       onKeyDown={onComposerKeyDown}
-                      placeholder="Write a note..."
+                      placeholder="Not yaz..."
                       disabled={!isOnline}
                       className={`w-full bg-transparent placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none resize-none p-2 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
@@ -2552,7 +2552,7 @@ function NotesUI({
                           value={clInput}
                           onChange={(e) => setClInput(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addComposerItem(); } }}
-                          placeholder="List item…"
+                          placeholder="Liste öğesi…"
                           disabled={!isOnline}
                           className={`flex-1 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none p-2 border-b border-[var(--border-light)] ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''
                             }`}
@@ -2595,7 +2595,7 @@ function NotesUI({
                         <div key={im.id} className="relative">
                           <img src={im.src} alt={im.name} className="h-16 w-24 object-cover rounded-md border border-[var(--border-light)]" />
                           <button
-                            title="Remove image"
+                            title="Resmi kaldır"
                             className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-5 h-5 text-xs"
                             onClick={() => setComposerImages((prev) => prev.filter((x) => x.id !== im.id))}
                           >
@@ -2612,7 +2612,7 @@ function NotesUI({
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
                       type="text"
-                      placeholder="Add tags (comma-separated)"
+                      placeholder="Etiket ekle (virgülle ayırın)"
                       disabled={!isOnline}
                       className={`w-full sm:flex-1 bg-transparent text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none p-2 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
@@ -2627,9 +2627,9 @@ function NotesUI({
                             type="button"
                             onClick={() => setShowComposerFmt((v) => !v)}
                             className="px-2 py-1 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 flex items-center gap-2 text-sm"
-                            title="Formatting"
+                            title="Biçimlendirme"
                           >
-                            <FormatIcon /> Formatting
+                            <FormatIcon /> Biçimlendirme
                           </button>
                           <Popover
                             anchorRef={composerFmtBtnRef}
@@ -2650,7 +2650,7 @@ function NotesUI({
                             ? 'bg-indigo-600 text-white border-indigo-600'
                             : 'border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10'
                             }`}
-                          title="Text note"
+                          title="Metin notu"
                         >
                           📝
                         </button>
@@ -2661,7 +2661,7 @@ function NotesUI({
                             ? 'bg-indigo-600 text-white border-indigo-600'
                             : 'border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10'
                             }`}
-                          title="Checklist"
+                          title="Yapılacaklar"
                         >
                           ✅
                         </button>
@@ -2672,7 +2672,7 @@ function NotesUI({
                             ? 'bg-indigo-600 text-white border-indigo-600'
                             : 'border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10'
                             }`}
-                          title="Drawing"
+                          title="Çizim"
                         >
                           🖌️
                         </button>
@@ -2684,7 +2684,7 @@ function NotesUI({
                         type="button"
                         onClick={() => setShowColorPop((v) => !v)}
                         className="w-6 h-6 rounded-full border-2 border-[var(--border-light)] hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 flex items-center justify-center"
-                        title="Color"
+                        title="Renk"
                         style={{
                           backgroundColor: composerColor === "default" ? "transparent" : solid(bgFor(composerColor, dark)),
                           borderColor: composerColor === "default" ? "#d1d5db" : solid(bgFor(composerColor, dark)),
@@ -2741,7 +2741,7 @@ function NotesUI({
                       <button
                         onClick={() => composerFileRef.current?.click()}
                         className="px-2 py-1 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 flex-shrink-0 text-lg"
-                        title="Add images"
+                        title="Resim ekle"
                       >
                         🖼️
                       </button>
@@ -2855,7 +2855,7 @@ function NotesUI({
         {
           notesLoading && (pinned.length + others.length === 0) && (
             <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-              Loading Notes…
+              Notlar Yükleniyor…
             </p>
           )
         }
@@ -2900,10 +2900,10 @@ function AdminView({ dark }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to load users");
+      if (!res.ok) throw new Error(data?.error || "Kullanıcılar yüklenemedi");
       setUsers(Array.isArray(data) ? data : []);
     } catch (e) {
-      alert(e.message || "Failed to load admin data");
+      alert(e.message || "Yönetici verileri yüklenemedi");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -2917,10 +2917,10 @@ function AdminView({ dark }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Delete failed");
+      if (!res.ok) throw new Error(data?.error || "Silme başarısız");
       setUsers((prev) => prev.filter((u) => u.id !== id));
     } catch (e) {
-      alert(e.message || "Delete failed");
+      alert(e.message || "Silme başarısız");
     }
   }
 
@@ -2929,39 +2929,39 @@ function AdminView({ dark }) {
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-8 lg:px-12 py-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4">Admin</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4">Yönetici</h1>
         <p className="mb-6 text-sm text-gray-600 dark:text-gray-300">
-          Manage registered users. You can remove users (this also deletes their notes).
+          Kayıtlı kullanıcıları yönetin. Kullanıcıları kaldırabilirsiniz (bu, notlarını da siler).
         </p>
 
         <div className="glass-card rounded-xl p-4 shadow-lg overflow-x-auto">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-lg">Users</h2>
+            <h2 className="font-semibold text-lg">Kullanıcılar</h2>
             <button
               onClick={load}
               className="px-3 py-1.5 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 text-sm"
             >
-              {loading ? "Refreshing…" : "Refresh"}
+              {loading ? "Yenileniyor…" : "Yenile"}
             </button>
           </div>
 
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b border-[var(--border-light)]">
-                <th className="py-2 pr-3">Name</th>
-                <th className="py-2 pr-3">Email / Username</th>
-                <th className="py-2 pr-3">Notes</th>
-                <th className="py-2 pr-3">Storage</th>
-                <th className="py-2 pr-3">Admin</th>
-                <th className="py-2 pr-3">Created</th>
-                <th className="py-2 pr-3">Actions</th>
+                <th className="py-2 pr-3">İsim</th>
+                <th className="py-2 pr-3">E-posta / Kullanıcı Adı</th>
+                <th className="py-2 pr-3">Notlar</th>
+                <th className="py-2 pr-3">Depolama</th>
+                <th className="py-2 pr-3">Yönetici</th>
+                <th className="py-2 pr-3">Oluşturulma</th>
+                <th className="py-2 pr-3">İşlemler</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 && !loading && (
                 <tr>
                   <td colSpan={7} className="py-6 text-center text-gray-500 dark:text-gray-400">
-                    No users found.
+                    Kullanıcı bulunamadı.
                   </td>
                 </tr>
               )}
@@ -2978,7 +2978,7 @@ function AdminView({ dark }) {
                         : "bg-gray-500/10 text-gray-700 dark:text-gray-300 border border-gray-500/20"
                         }`}
                     >
-                      {u.is_admin ? "Yes" : "No"}
+                      {u.is_admin ? "Evet" : "Hayır"}
                     </span>
                   </td>
                   <td className="py-2 pr-3">
@@ -2989,14 +2989,14 @@ function AdminView({ dark }) {
                       className="px-2.5 py-1.5 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
                       onClick={() => {
                         showGenericConfirm({
-                          title: "Delete User",
+                          title: "Kullanıcıyı Sil",
                           message: "Delete this user and ALL their notes? This cannot be undone.",
-                          confirmText: "Delete",
+                          confirmText: "Sil",
                           danger: true,
                           onConfirm: () => removeUser(u.id)
                         });
                       }}
-                      title="Delete user"
+                      title="Kullanıcıyı sil"
                     >
                       Delete
                     </button>
@@ -3252,9 +3252,9 @@ export default function App() {
   const onBulkDelete = async () => {
     if (!selectedIds.length) return;
     showGenericConfirm({
-      title: "Delete Notes",
+      title: "Notları Sil",
       message: `Delete ${selectedIds.length} selected note(s)? This cannot be undone.`,
-      confirmText: "Delete",
+      confirmText: "Sil",
       danger: true,
       onConfirm: async () => {
         try {
@@ -3265,7 +3265,7 @@ export default function App() {
           setNotes((prev) => prev.filter((n) => !selectedIds.includes(String(n.id))));
           onExitMulti();
         } catch (e) {
-          alert(e.message || "Bulk delete failed");
+          alert(e.message || "Toplu silme başarısız");
         }
       }
     });
@@ -3402,7 +3402,7 @@ export default function App() {
       const ts = new Date().toISOString().replace(/[:.]/g, "-");
       triggerBlobDownload(`glass-keep-selected-${ts}.zip`, blob);
     } catch (e) {
-      alert(e.message || "ZIP download failed");
+      alert(e.message || "ZIP indirme başarısız");
     }
   };
 
@@ -4216,7 +4216,7 @@ export default function App() {
       setComposerCollapsed(true);
       if (contentRef.current) contentRef.current.style.height = "auto";
     } catch (e) {
-      alert(e.message || "Failed to add note");
+      alert(e.message || "Not eklenemedi");
     }
   };
 
@@ -4253,7 +4253,7 @@ export default function App() {
         closeModal();
       }
     } catch (e) {
-      alert(e.message || "Failed to archive note");
+      alert(e.message || "Not arşivlenemedi");
     }
   };
 
@@ -4274,7 +4274,7 @@ export default function App() {
       const settings = await api("/admin/settings", { method: "PATCH", token, body: newSettings });
       setAdminSettings(settings);
     } catch (e) {
-      alert(e.message || "Failed to update admin settings");
+      alert(e.message || "Yönetici ayarları güncellenemedi");
     }
   };
 
@@ -4296,7 +4296,7 @@ export default function App() {
       setNewUserForm({ name: '', email: '', password: '', is_admin: false });
       return newUser;
     } catch (e) {
-      alert(e.message || "Failed to create user");
+      alert(e.message || "Kullanıcı oluşturulamadı");
       throw e;
     }
   };
@@ -4306,7 +4306,7 @@ export default function App() {
       await api(`/admin/users/${userId}`, { method: "DELETE", token });
       setAllUsers(prev => prev.filter(u => u.id !== userId));
     } catch (e) {
-      alert(e.message || "Failed to delete user");
+      alert(e.message || "Kullanıcı silinemedi");
     }
   };
 
@@ -4362,7 +4362,7 @@ export default function App() {
       const fname = sanitizeFilename(`glass-keep-notes-${currentUser?.email || "user"}-${ts}`) + ".json";
       triggerJSONDownload(fname, json);
     } catch (e) {
-      alert(e.message || "Export failed");
+      alert(e.message || "Dışa aktarma başarısız");
     }
   };
 
@@ -4373,12 +4373,12 @@ export default function App() {
       const text = await file.text();
       const parsed = JSON.parse(text);
       const notesArr = Array.isArray(parsed?.notes) ? parsed.notes : (Array.isArray(parsed) ? parsed : []);
-      if (!notesArr.length) { alert("No notes found in file."); return; }
+      if (!notesArr.length) { alert("Dosyada not bulunamadı."); return; }
       await api("/notes/import", { method: "POST", token, body: { notes: notesArr } });
       await loadNotes();
-      alert(`Imported ${notesArr.length} note(s) successfully.`);
+      alert(`${notesArr.length} not başarıyla içe aktarıldı.`);
     } catch (e) {
-      alert(e.message || "Import failed");
+      alert(e.message || "İçe aktarma başarısız");
     }
   };
 
@@ -4422,12 +4422,12 @@ export default function App() {
           });
         } catch (e) { }
       }
-      if (!notesArr.length) { alert("No valid Google Keep notes found."); return; }
+      if (!notesArr.length) { alert("Geçerli Google Keep notu bulunamadı."); return; }
       await api("/notes/import", { method: "POST", token, body: { notes: notesArr } });
       await loadNotes();
-      alert(`Imported ${notesArr.length} Google Keep note(s).`);
+      alert(`${notesArr.length} Google Keep notu içe aktarıldı.`);
     } catch (e) {
-      alert(e.message || "Google Keep import failed");
+      alert(e.message || "Google Keep içe aktarma başarısız");
     }
   };
 
@@ -4479,15 +4479,15 @@ export default function App() {
       }
 
       if (!notesArr.length) {
-        alert("No valid markdown files found.");
+        alert("Geçerli markdown dosyası bulunamadı.");
         return;
       }
 
       await api("/notes/import", { method: "POST", token, body: { notes: notesArr } });
       await loadNotes();
-      alert(`Imported ${notesArr.length} markdown file(s) successfully.`);
+      alert(`${notesArr.length} markdown dosyası başarıyla içe aktarıldı.`);
     } catch (e) {
-      alert(e.message || "Markdown import failed");
+      alert(e.message || "Markdown içe aktarma başarısız");
     }
   };
 
@@ -4535,7 +4535,7 @@ export default function App() {
         method: "DELETE",
         token
       });
-      showToast("Collaborator removed successfully", "success");
+      showToast("İşbirlikçi başarıyla kaldırıldı", "success");
       if (collaborationDialogNoteId) {
         loadNoteCollaborators(collaborationDialogNoteId);
       }
@@ -4544,7 +4544,7 @@ export default function App() {
       }
       invalidateNotesCache();
     } catch (e) {
-      showToast(e.message || "Failed to remove collaborator", "error");
+      showToast(e.message || "İşbirlikçi kaldırılamadı", "error");
     }
   };
 
@@ -4650,7 +4650,7 @@ export default function App() {
           : n
       ));
 
-      showToast(`Added ${username} as collaborator successfully!`, "success");
+      showToast(`${username} işbirlikçi olarak başarıyla eklendi!`, "success");
       setCollaboratorUsername("");
       setShowUserDropdown(false);
       setFilteredUsers([]);
@@ -4660,7 +4660,7 @@ export default function App() {
         loadNoteCollaborators(activeId);
       }
     } catch (e) {
-      showToast(e.message || "Failed to add collaborator", "error");
+      showToast(e.message || "İşbirlikçi eklenemedi", "error");
     }
   };
 
@@ -4672,17 +4672,17 @@ export default function App() {
       const ts = new Date().toISOString().replace(/[:.]/g, "-");
       const fname = `glass-keep-secret-key-${ts}.txt`;
       const content =
-        `Glass Keep — Secret Recovery Key\n\n` +
-        `Keep this key safe. Anyone with this key can sign in as you.\n\n` +
-        `Secret Key:\n${data.key}\n\n` +
-        `Instructions:\n` +
-        `1) Go to the login page.\n` +
-        `2) Click "Forgot username/password?".\n` +
-        `3) Choose "Sign in with Secret Key" and paste this key.\n`;
+        `Glass Keep — Gizli Kurtarma Anahtarı\n\n` +
+        `Bu anahtarı güvenli tutun. Bu anahtara sahip olan herkes hesabınıza erişebilir.\n\n` +
+        `Gizli Anahtar:\n${data.key}\n\n` +
+        `Talimatlar:\n` +
+        `1) Giriş sayfasına gidin.\n` +
+        `2) "Kullanıcı adı/şifremi unuttum"u tıklayın.\n` +
+        `3) "Gizli Anahtar ile Giriş Yap"ı seçin ve bu anahtarı yapıştırın.\n`;
       downloadText(fname, content);
-      alert("Secret key downloaded. Store it in a safe place.");
+      alert("Gizli anahtar indirildi. Güvenli bir yerde saklayın.");
     } catch (e) {
-      alert(e.message || "Could not generate secret key.");
+      alert(e.message || "Gizli anahtar oluşturulamadı.");
     }
   };
 
@@ -5050,7 +5050,7 @@ export default function App() {
       ));
       closeModal();
     } catch (e) {
-      alert(e.message || "Failed to save note");
+      alert(e.message || "Not kaydedilemedi");
     } finally {
       setSavingModal(false);
     }
@@ -5061,7 +5061,7 @@ export default function App() {
       // Check if user owns the note
       const note = notes.find(n => String(n.id) === String(activeId));
       if (note && note.user_id !== currentUser?.id) {
-        showToast("You can't delete this note as you don't own it", "error");
+        showToast("Bu notu silmek için yetkiniz yok", "error");
         return;
       }
 
@@ -5070,12 +5070,12 @@ export default function App() {
 
       setNotes((prev) => prev.filter((n) => String(n.id) !== String(activeId)));
       closeModal();
-      showToast("Note deleted successfully", "success");
+      showToast("Not başarıyla silindi", "success");
     } catch (e) {
       if (e.status === 404 || e.message?.includes("not found")) {
-        showToast("You can't delete this note as you don't own it", "error");
+        showToast("Bu notu silmek için yetkiniz yok", "error");
       } else {
-        showToast(e.message || "Delete failed", "error");
+        showToast(e.message || "Silme başarısız", "error");
       }
     }
   };
@@ -5086,7 +5086,7 @@ export default function App() {
 
       setNotes((prev) => prev.map((n) => (String(n.id) === String(id) ? { ...n, pinned: !!toPinned } : n)));
     } catch (e) {
-      alert(e.message || "Failed to toggle pin");
+      alert(e.message || "Sabitleme değiştirilemedi");
     }
   };
 
@@ -5383,15 +5383,15 @@ export default function App() {
         if (wrapper.querySelector('.code-copy-btn')) return;
         const btn = document.createElement("button");
         btn.className = "code-copy-btn";
-        btn.textContent = "Copy";
+        btn.textContent = "Kopyala";
         btn.setAttribute("data-copy-btn", "1");
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const codeEl = pre.querySelector("code");
           const text = codeEl ? codeEl.textContent : pre.textContent;
           navigator.clipboard?.writeText(text || "");
-          btn.textContent = "Copied";
-          setTimeout(() => (btn.textContent = "Copy"), 1200);
+          btn.textContent = "Kopyalandı";
+          setTimeout(() => (btn.textContent = "Kopyala"), 1200);
         });
         wrapper.appendChild(btn);
       });
@@ -5407,13 +5407,13 @@ export default function App() {
           return;
         const btn = document.createElement("button");
         btn.className = "inline-code-copy-btn";
-        btn.textContent = "Copy";
+        btn.textContent = "Kopyala";
         btn.setAttribute("data-copy-btn", "1");
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           navigator.clipboard?.writeText(code.textContent || "");
-          btn.textContent = "Copied";
-          setTimeout(() => (btn.textContent = "Copy"), 1200);
+          btn.textContent = "Kopyalandı";
+          setTimeout(() => (btn.textContent = "Kopyala"), 1200);
         });
         code.insertAdjacentElement("afterend", btn);
       });
@@ -5478,7 +5478,7 @@ export default function App() {
                     }`}
                   value={mTitle}
                   onChange={(e) => { if (isOnline) setMTitle(e.target.value) }}
-                  placeholder="Title"
+                  placeholder="Başlık"
                   disabled={!isOnline}
                 />
                 <div className="flex items-center gap-2 flex-none ml-auto">
@@ -5507,9 +5507,9 @@ export default function App() {
                     <button
                       className="px-3 py-1.5 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 text-sm"
                       onClick={() => { setViewMode((v) => !v); setShowModalFmt(false); }}
-                      title={viewMode ? "Switch to Edit mode" : "Switch to View mode"}
+                      title={viewMode ? "Düzenleme moduna geç" : "Görüntüleme moduna geç"}
                     >
-                      {viewMode ? "Edit mode" : "View mode"}
+                      {viewMode ? "Düzenleme modu" : "Görüntüleme modu"}
                     </button>
                   )}
 
@@ -5518,7 +5518,7 @@ export default function App() {
                       <button
                         ref={modalFmtBtnRef}
                         className="rounded-full p-2.5 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        title="Formatting"
+                        title="Biçimlendirme"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowModalFmt((v) => !v);
@@ -5542,7 +5542,7 @@ export default function App() {
                       <button
                         ref={modalMenuBtnRef}
                         className="rounded-full p-2 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        title="More options"
+                        title="Daha fazla seçenek"
                         onClick={(e) => { e.stopPropagation(); setModalMenuOpen((v) => !v); }}
                       >
                         <Kebab />
@@ -5575,7 +5575,7 @@ export default function App() {
                             }}
                           >
                             <ArchiveIcon />
-                            {activeNoteObj?.archived ? "Unarchive" : "Archive"}
+                            {activeNoteObj?.archived ? "Arşivden Çıkar" : "Arşivle"}
                           </button>
                           <button
                             className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-red-600 ${dark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
@@ -5593,7 +5593,7 @@ export default function App() {
                   {isOnline && tagFilter !== 'ARCHIVED' && (
                     <button
                       className="rounded-full p-2 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      title="Pin/unpin"
+                      title="Sabitle/Kaldır"
                       onClick={() => activeId != null && togglePin(activeId, !(notes.find((n) => String(n.id) === String(activeId))?.pinned))}
                     >
                       {(notes.find((n) => String(n.id) === String(activeId))?.pinned) ? <PinFilled /> : <PinOutline />}
@@ -5602,7 +5602,7 @@ export default function App() {
 
                   <button
                     className="rounded-full p-2.5 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    title="Close"
+                    title="Kapat"
                     onClick={closeModal}
                   >
                     <CloseIcon />
@@ -5626,7 +5626,7 @@ export default function App() {
                       />
                       {isOnline && (
                         <button
-                          title="Remove image"
+                          title="Resmi kaldır"
                           className="absolute -top-2 -right-2 bg-black/70 text-white rounded-full w-5 h-5 text-xs"
                           onClick={() => setMImages((prev) => prev.filter((x) => x.id !== im.id))}
                         >
@@ -5696,7 +5696,7 @@ export default function App() {
                           }
                         }
                       }}
-                      placeholder="Write your note…"
+                      placeholder="Notunuzu yazın…"
                       disabled={!isOnline}
                     />
                   </div>
@@ -5728,7 +5728,7 @@ export default function App() {
                             }
                           }
                         }}
-                        placeholder="List item…"
+                        placeholder="Liste öğesi…"
                         className="flex-1 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none p-2 border-b border-[var(--border-light)]"
                       />
                       <button
@@ -5975,7 +5975,7 @@ export default function App() {
                   {isOnline && (
                     <button
                       className="ml-1 opacity-70 hover:opacity-100 focus:outline-none"
-                      title="Remove tag"
+                      title="Etiketi kaldır"
                       onClick={() => setMTagList((prev) => prev.filter((t) => t !== tag))}
                     >
                       ×
@@ -5991,7 +5991,7 @@ export default function App() {
                   onKeyDown={handleTagKeyDown}
                   onBlur={handleTagBlur}
                   onPaste={handleTagPaste}
-                  placeholder={mTagList.length ? "Add tag" : "Add tags"}
+                  placeholder={mTagList.length ? "Etiket ekle" : "Etiket ekle"}
                   className="bg-transparent text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none min-w-[8ch] flex-1"
                 />
               )}
@@ -6007,7 +6007,7 @@ export default function App() {
                     type="button"
                     onClick={() => setShowModalColorPop((v) => !v)}
                     className="w-6 h-6 rounded-full border-2 border-[var(--border-light)] hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 flex items-center justify-center"
-                    title="Color"
+                    title="Renk"
                     style={{
                       backgroundColor: mColor === "default" ? "transparent" : solid(bgFor(mColor, dark)),
                       borderColor: mColor === "default" ? "#d1d5db" : solid(bgFor(mColor, dark)),
@@ -6057,7 +6057,7 @@ export default function App() {
                   <button
                     onClick={() => modalFileRef.current?.click()}
                     className="px-2 py-1 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10 text-lg"
-                    title="Add images"
+                    title="Resim ekle"
                   >
                     🖼️
                   </button>
@@ -6071,7 +6071,7 @@ export default function App() {
                   disabled={savingModal}
                   className={`px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 whitespace-nowrap ${savingModal ? "bg-indigo-400 text-white cursor-not-allowed" : "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500"}`}
                 >
-                  {savingModal ? "Saving..." : "Save"}
+                  {savingModal ? "Kaydediliyor..." : "Kaydet"}
                 </button>
               )}
               {/* Delete button moved to modal 3-dot menu */}
@@ -6138,13 +6138,13 @@ export default function App() {
                   return (
                     <>
                       <h3 className="text-lg font-semibold mb-4">
-                        {isOwner ? "Add Collaborator" : "Collaborators"}
+                        {isOwner ? "İşbirlikçi Ekle" : "İşbirlikçiler"}
                       </h3>
 
                       {/* Show existing collaborators with remove option */}
                       {addModalCollaborators.length > 0 && (
                         <div className="mb-4">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Collaborators:</p>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mevcut İşbirlikçiler:</p>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
                             {addModalCollaborators.map((collab) => {
                               const canRemove = isOwner || collab.id === currentUser?.id;
@@ -6164,9 +6164,9 @@ export default function App() {
                                         await removeCollaborator(collab.id, activeId);
                                       }}
                                       className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                                      title={collab.id === currentUser?.id ? "Remove yourself" : "Remove collaborator"}
+                                      title={collab.id === currentUser?.id ? "Ayrıl" : "İşbirlikçiyi kaldır"}
                                     >
-                                      {collab.id === currentUser?.id ? "Leave" : "Remove"}
+                                      {collab.id === currentUser?.id ? "Ayrıl" : "Kaldır"}
                                     </button>
                                   )}
                                 </div>
@@ -6196,7 +6196,7 @@ export default function App() {
                                 updateDropdownPosition();
                                 searchUsers(collaboratorUsername || "");
                               }}
-                              placeholder="Search by username or email"
+                              placeholder="Kullanıcı adı veya e-posta ile ara"
                               className="w-full px-3 py-2 border border-[var(--border-light)] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-transparent"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && collaboratorUsername.trim()) {
@@ -6234,7 +6234,7 @@ export default function App() {
                                 }
                               }}
                             >
-                              Add Collaborator
+                              İşbirlikçi Ekle
                             </button>
                           </div>
                         </>
@@ -6316,7 +6316,7 @@ export default function App() {
           <div className="absolute top-4 right-4 flex items-center gap-2">
             <button
               className="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20"
-              title="Download (D)"
+              title="İndir (D)"
               onClick={async (e) => {
                 e.stopPropagation();
                 const im = mImages[imgViewIndex];
@@ -6330,7 +6330,7 @@ export default function App() {
             </button>
             <button
               className="px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20"
-              title="Close (Esc)"
+              title="Kapat (Esc)"
               onClick={(e) => { e.stopPropagation(); closeImageViewer(); }}
             >
               <CloseIcon />
@@ -6342,14 +6342,14 @@ export default function App() {
             <>
               <button
                 className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full hover:bg-white/20"
-                title="Previous (←)"
+                title="Önceki (←)"
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
               >
                 <ArrowLeft />
               </button>
               <button
                 className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full hover:bg-white/20"
-                title="Next (→)"
+                title="Sonraki (→)"
                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
               >
                 <ArrowRight />
@@ -6388,7 +6388,7 @@ export default function App() {
   if (route === "#/admin") {
     if (!currentUser?.email) {
       return (
-        <AuthShell title="Admin Panel" dark={dark} onToggleDark={toggleDark}>
+        <AuthShell title="Yönetim Paneli" dark={dark} onToggleDark={toggleDark}>
           <p className="text-sm mb-4">
             You must sign in as an admin to view this page.
           </p>
@@ -6396,20 +6396,20 @@ export default function App() {
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
             onClick={() => (window.location.hash = "#/login")}
           >
-            Go to Sign In
+            Giriş Yap'a git
           </button>
         </AuthShell>
       );
     }
     if (!currentUser?.is_admin) {
       return (
-        <AuthShell title="Admin Panel" dark={dark} onToggleDark={toggleDark}>
+        <AuthShell title="Yönetim Paneli" dark={dark} onToggleDark={toggleDark}>
           <p className="text-sm">Not authorized. Your account is not an admin.</p>
           <button
             className="mt-4 px-4 py-2 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10"
             onClick={() => (window.location.hash = "#/notes")}
           >
-            Back to Notes
+            Notlara Dön
           </button>
         </AuthShell>
       );
@@ -6631,7 +6631,7 @@ export default function App() {
             style={{ backgroundColor: dark ? "rgba(40,40,40,0.95)" : "rgba(255,255,255,0.95)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-2">{genericConfirmConfig.title || "Confirm Action"}</h3>
+            <h3 className="text-lg font-semibold mb-2">{genericConfirmConfig.title || "Onayla"}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {genericConfirmConfig.message}
             </p>
@@ -6640,7 +6640,7 @@ export default function App() {
                 className="px-4 py-2 rounded-lg border border-[var(--border-light)] hover:bg-black/5 dark:hover:bg-white/10"
                 onClick={() => setGenericConfirmOpen(false)}
               >
-                {genericConfirmConfig.cancelText || "Cancel"}
+                {genericConfirmConfig.cancelText || "İptal"}
               </button>
               <button
                 className={`px-4 py-2 rounded-lg ${genericConfirmConfig.danger ? "bg-red-600 text-white hover:bg-red-700" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}
@@ -6651,7 +6651,7 @@ export default function App() {
                   }
                 }}
               >
-                {genericConfirmConfig.confirmText || "Confirm"}
+                {genericConfirmConfig.confirmText || "Onayla"}
               </button>
             </div>
           </div>

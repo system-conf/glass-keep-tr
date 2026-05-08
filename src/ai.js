@@ -30,7 +30,7 @@ export async function initAI(onProgress) {
 export async function askAI(question, notes, onProgress) {
   const token = getAuthToken();
   if (!token) {
-    throw new Error("You must be logged in to use the AI Assistant.");
+    throw new Error("AI Asistanını kullanmak için giriş yapmalısınız.");
   }
 
   // We can still simulate "starting" if we want, or just call the API

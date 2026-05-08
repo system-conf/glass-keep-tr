@@ -218,7 +218,7 @@ function signToken(user) {
 function auth(req, res, next) {
   const h = req.headers.authorization || "";
   const token = h.startsWith("Bearer ") ? h.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "Missing token" });
+  if (!token) return res.status(401).json({ error: "Token eksik" });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = {
@@ -229,7 +229,7 @@ function auth(req, res, next) {
     };
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Geçersiz token" });
   }
 }
 
@@ -239,7 +239,7 @@ function authFromQueryOrHeader(req, res, next) {
   const headerToken = h.startsWith("Bearer ") ? h.slice(7) : null;
   const queryToken = req.query && typeof req.query.token === "string" ? req.query.token : null;
   const token = headerToken || queryToken;
-  if (!token) return res.status(401).json({ error: "Missing token" });
+  if (!token) return res.status(401).json({ error: "Token eksik" });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = {
@@ -250,7 +250,7 @@ function authFromQueryOrHeader(req, res, next) {
     };
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Geçersiz token" });
   }
 }
 
@@ -465,14 +465,14 @@ app.get("/api/events", authFromQueryOrHeader, (req, res) => {
 app.post("/api/register", (req, res) => {
   // Check if new account creation is allowed
   if (!adminSettings.allowNewAccounts) {
-    return res.status(403).json({ error: "New account creation is currently disabled." });
+    return res.status(403).json({ error: "Yeni hesap oluşturma şu anda devre dışı." });
   }
 
   const { name, email, password } = req.body || {};
   if (!email || !password)
-    return res.status(400).json({ error: "Email and password are required." });
+    return res.status(400).json({ error: "E-posta ve şifre gereklidir." });
   if (getUserByEmail.get(email))
-    return res.status(409).json({ error: "Email already registered." });
+    return res.status(409).json({ error: "Bu e-posta zaten kayıtlı." });
 
   const hash = bcrypt.hashSync(password, 10);
   const info = insertUser.run(name?.trim() || "User", email.trim(), hash, nowISO());
@@ -491,9 +491,9 @@ app.post("/api/register", (req, res) => {
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body || {};
   const user = email ? getUserByEmail.get(email) : null;
-  if (!user) return res.status(401).json({ error: "No account found for that email." });
+  if (!user) return res.status(401).json({ error: "Bu e-posta ile hesap bulunamadı." });
   if (!bcrypt.compareSync(password || "", user.password_hash)) {
-    return res.status(401).json({ error: "Incorrect password." });
+    return res.status(401).json({ error: "Yanlış şifre." });
   }
   const token = signToken(user);
   res.json({
@@ -531,7 +531,7 @@ app.post("/api/secret-key", auth, (req, res) => {
 app.post("/api/login/secret", (req, res) => {
   const { key } = req.body || {};
   if (!key || typeof key !== "string" || key.length < 16) {
-    return res.status(400).json({ error: "Invalid key." });
+    return res.status(400).json({ error: "Geçersiz anahtar." });
   }
   const rows = getUsersWithSecret.all();
   for (const u of rows) {
@@ -543,7 +543,7 @@ app.post("/api/login/secret", (req, res) => {
       });
     }
   }
-  return res.status(401).json({ error: "Secret key not recognized." });
+  return res.status(401).json({ error: "Gizli anahtar tanınmadı." });
 });
 
 // ---------- Notes ----------
@@ -643,7 +643,7 @@ app.post("/api/notes", auth, (req, res) => {
 app.put("/api/notes/:id", auth, (req, res) => {
   const id = req.params.id;
   const existing = getNoteWithCollaboration.get(req.user.id, id, req.user.id);
-  if (!existing) return res.status(404).json({ error: "Note not found" });
+  if (!existing) return res.status(404).json({ error: "Not bulunamadı" });
 
   const b = req.body || {};
   const updated = {
@@ -664,7 +664,7 @@ app.put("/api/notes/:id", auth, (req, res) => {
   const result = updateNoteWithCollaboration.run(updated);
 
   if (result.changes === 0) {
-    return res.status(404).json({ error: "Note not found or access denied" });
+    return res.status(404).json({ error: "Not bulunamadı veya erişim reddedildi" });
   }
 
   // Update editor tracking (store display name)
@@ -676,7 +676,7 @@ app.put("/api/notes/:id", auth, (req, res) => {
 app.patch("/api/notes/:id", auth, (req, res) => {
   const id = req.params.id;
   const existing = getNoteWithCollaboration.get(req.user.id, id, req.user.id);
-  if (!existing) return res.status(404).json({ error: "Note not found" });
+  if (!existing) return res.status(404).json({ error: "Not bulunamadı" });
   const p = {
     id,
     user_id: req.user.id,
@@ -693,7 +693,7 @@ app.patch("/api/notes/:id", auth, (req, res) => {
   const result = patchPartialWithCollaboration.run(p);
 
   if (result.changes === 0) {
-    return res.status(404).json({ error: "Note not found or access denied" });
+    return res.status(404).json({ error: "Not bulunamadı veya erişim reddedildi" });
   }
 
   // Update editor tracking (store display name)
@@ -741,24 +741,24 @@ app.post("/api/notes/:id/collaborate", auth, (req, res) => {
   const { username } = req.body || {};
 
   if (!username || typeof username !== "string") {
-    return res.status(400).json({ error: "Username is required" });
+    return res.status(400).json({ error: "Kullanıcı adı gereklidir" });
   }
 
   // Check if note exists and user owns it
   const note = getNote.get(noteId, req.user.id);
   if (!note) {
-    return res.status(404).json({ error: "Note not found" });
+    return res.status(404).json({ error: "Not bulunamadı" });
   }
 
   // Find user to collaborate with (by email or name)
   const collaborator = getUserByEmail.get(username) || getUserByName.get(username);
   if (!collaborator) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "Kullanıcı bulunamadı" });
   }
 
   // Don't allow self-collaboration
   if (collaborator.id === req.user.id) {
-    return res.status(400).json({ error: "Cannot collaborate with yourself" });
+    return res.status(400).json({ error: "Kendi kendinize işbirliği yapamazsınız" });
   }
 
   try {
@@ -771,7 +771,7 @@ app.post("/api/notes/:id/collaborate", auth, (req, res) => {
 
     res.json({
       ok: true,
-      message: `Added ${collaborator.name} as collaborator`,
+      message: `${collaborator.name} işbirlikçi olarak eklendi`,
       collaborator: {
         id: collaborator.id,
         name: collaborator.name,
@@ -780,9 +780,9 @@ app.post("/api/notes/:id/collaborate", auth, (req, res) => {
     });
   } catch (e) {
     if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return res.status(409).json({ error: "User is already a collaborator" });
+      return res.status(409).json({ error: "Kullanıcı zaten işbirlikçi" });
     }
-    return res.status(500).json({ error: "Failed to add collaborator" });
+    return res.status(500).json({ error: "İşbirlikçi eklenemedi" });
   }
 });
 
@@ -792,7 +792,7 @@ app.get("/api/notes/:id/collaborators", auth, (req, res) => {
   // Check if note exists and user owns it or is a collaborator
   const note = getNoteWithCollaboration.get(req.user.id, noteId, req.user.id);
   if (!note) {
-    return res.status(404).json({ error: "Note not found" });
+    return res.status(404).json({ error: "Not bulunamadı" });
   }
 
   const collaborators = getNoteCollaborators.all(noteId);
@@ -812,7 +812,7 @@ app.delete("/api/notes/:id/collaborate/:userId", auth, (req, res) => {
   // Check if note exists
   const note = getNoteWithCollaboration.get(req.user.id, noteId, req.user.id);
   if (!note) {
-    return res.status(404).json({ error: "Note not found" });
+    return res.status(404).json({ error: "Not bulunamadı" });
   }
 
   // Check if user is the owner (can remove anyone) or is removing themselves
@@ -820,7 +820,7 @@ app.delete("/api/notes/:id/collaborate/:userId", auth, (req, res) => {
   const isRemovingSelf = String(userIdToRemove) === String(req.user.id);
 
   if (!isOwner && !isRemovingSelf) {
-    return res.status(403).json({ error: "Only note owner can remove other collaborators" });
+    return res.status(403).json({ error: "Sadece not sahibi diğer işbirlikçileri kaldırabilir" });
   }
 
   // Remove collaborator
@@ -832,14 +832,14 @@ app.delete("/api/notes/:id/collaborate/:userId", auth, (req, res) => {
   const result = removeCollaborator.run(noteId, userIdToRemove);
 
   if (result.changes === 0) {
-    return res.status(404).json({ error: "Collaborator not found" });
+    return res.status(404).json({ error: "İşbirlikçi bulunamadı" });
   }
 
   // Update note with editor info
   updateNoteWithEditor.run(nowISO(), req.user.name || req.user.email, nowISO(), noteId);
   broadcastNoteUpdated(noteId);
 
-  res.json({ ok: true, message: "Collaborator removed" });
+  res.json({ ok: true, message: "İşbirlikçi kaldırıldı" });
 });
 
 app.get("/api/notes/collaborated", auth, (req, res) => {
@@ -872,7 +872,7 @@ app.post("/api/notes/:id/archive", auth, (req, res) => {
   // Check if note exists and user owns it
   const existing = getNote.get(id, req.user.id);
   if (!existing) {
-    return res.status(404).json({ error: "Note not found" });
+    return res.status(404).json({ error: "Not bulunamadı" });
   }
 
   // Update archived status
@@ -883,7 +883,7 @@ app.post("/api/notes/:id/archive", auth, (req, res) => {
   const result = updateArchived.run(archived ? 1 : 0, id, req.user.id);
 
   if (result.changes === 0) {
-    return res.status(404).json({ error: "Note not found or access denied" });
+    return res.status(404).json({ error: "Not bulunamadı veya erişim reddedildi" });
   }
 
   // Update editor tracking
@@ -948,7 +948,7 @@ app.post("/api/notes/import", auth, (req, res) => {
     : Array.isArray(payload)
       ? payload
       : [];
-  if (!src.length) return res.status(400).json({ error: "No notes to import." });
+  if (!src.length) return res.status(400).json({ error: "İçe aktarılacak not yok." });
 
   const rows = listNotes.all(req.user.id);
   const existing = new Set(rows.map((r) => r.id));
@@ -980,7 +980,7 @@ app.post("/api/notes/import", auth, (req, res) => {
 // ---------- Admin ----------
 function adminOnly(req, res, next) {
   const row = getUserById.get(req.user.id);
-  if (!row || !row.is_admin) return res.status(403).json({ error: "Admin only" });
+  if (!row || !row.is_admin) return res.status(403).json({ error: "Sadece yönetici" });
   next();
 }
 
@@ -1074,14 +1074,14 @@ const deleteUserStmt = db.prepare("DELETE FROM users WHERE id = ?");
 app.delete("/api/admin/users/:id", auth, adminOnly, (req, res) => {
   const id = Number(req.params.id);
   if (id === req.user.id) {
-    return res.status(400).json({ error: "You cannot delete yourself." });
+    return res.status(400).json({ error: "Kendinizi silemezsiniz." });
   }
   const target = getUserById.get(id);
-  if (!target) return res.status(404).json({ error: "User not found" });
+  if (!target) return res.status(404).json({ error: "Kullanıcı bulunamadı" });
 
   const adminCount = db.prepare("SELECT COUNT(*) AS c FROM users WHERE is_admin=1").get().c;
   if (target.is_admin && adminCount <= 1) {
-    return res.status(400).json({ error: "Cannot delete the last admin." });
+    return res.status(400).json({ error: "Son yönetici silinemez." });
   }
 
   deleteUserStmt.run(id);
@@ -1093,11 +1093,11 @@ app.post("/api/admin/users", auth, adminOnly, (req, res) => {
   const { name, email, password, is_admin } = req.body || {};
 
   if (!name || !email || !password) {
-    return res.status(400).json({ error: "Name, email, and password are required." });
+    return res.status(400).json({ error: "İsim, e-posta ve şifre gereklidir." });
   }
 
   if (getUserByEmail.get(email)) {
-    return res.status(409).json({ error: "Email already registered." });
+    return res.status(409).json({ error: "Bu e-posta zaten kayıtlı." });
   }
 
   const hash = bcrypt.hashSync(password, 10);
@@ -1128,21 +1128,21 @@ app.patch("/api/admin/users/:id", auth, adminOnly, (req, res) => {
   if (id === req.user.id && is_admin === false) {
     const adminCount = db.prepare("SELECT COUNT(*) AS c FROM users WHERE is_admin=1").get().c;
     if (adminCount <= 1) {
-      return res.status(400).json({ error: "Cannot remove admin status from the last admin." });
+      return res.status(400).json({ error: "Son yöneticiden yönetici durumu kaldırılamaz." });
     }
   }
 
   // Check if user exists
   const existing = getUserById.get(id);
   if (!existing) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "Kullanıcı bulunamadı" });
   }
 
   // Check if email is already taken by another user
   if (email && email !== existing.email) {
     const emailCheck = getUserByEmail.get(email);
     if (emailCheck && emailCheck.id !== id) {
-      return res.status(409).json({ error: "Email already in use by another user." });
+      return res.status(409).json({ error: "Bu e-posta başka bir kullanıcı tarafından kullanılıyor." });
     }
   }
 
@@ -1171,7 +1171,7 @@ app.patch("/api/admin/users/:id", auth, adminOnly, (req, res) => {
   }
 
   if (updates.length === 0) {
-    return res.status(400).json({ error: "No valid fields to update." });
+    return res.status(400).json({ error: "Güncellenecek geçerli alan yok." });
   }
 
   // Execute update
@@ -1180,7 +1180,7 @@ app.patch("/api/admin/users/:id", auth, adminOnly, (req, res) => {
   const result = updateStmt.run(...params);
 
   if (result.changes === 0) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: "Kullanıcı bulunamadı" });
   }
 
   // Return updated user data
@@ -1209,32 +1209,32 @@ app.get("/api/ai/status", auth, (req, res) => {
 app.post("/api/ai/initialize", auth, async (req, res) => {
   try {
     if (aiGenerator) {
-      return res.json({ ok: true, message: "AI already initialized" });
+      return res.json({ ok: true, message: "AI zaten başlatıldı" });
     }
 
     await initServerAI();
 
     if (!aiGenerator) {
-      return res.status(500).json({ error: "Failed to initialize AI model" });
+      return res.status(500).json({ error: "AI modeli başlatılamadı" });
     }
 
-    res.json({ ok: true, message: "AI initialized successfully" });
+    res.json({ ok: true, message: "AI başarıyla başlatıldı" });
   } catch (err) {
     console.error("AI initialization error:", err);
-    res.status(500).json({ error: "Failed to initialize AI model" });
+    res.status(500).json({ error: "AI modeli başlatılamadı" });
   }
 });
 
 app.post("/api/ai/ask", auth, async (req, res) => {
   const { question, notes } = req.body || {};
-  if (!question) return res.status(400).json({ error: "Missing question" });
+  if (!question) return res.status(400).json({ error: "Soru eksik" });
 
   try {
     if (!aiGenerator) {
       // Try to init if not ready
       await initServerAI();
       if (!aiGenerator) {
-        return res.status(503).json({ error: "AI Assistant is still initializing or failed to load." });
+        return res.status(503).json({ error: "AI Asistanı hâlâ başlatılıyor veya yüklenemedi." });
       }
     }
 
@@ -1255,9 +1255,10 @@ app.post("/api/ai/ask", auth, async (req, res) => {
 
     const prompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 You are a private assistant for the Glass Keep notes app.
-Use ONLY the provided Note Context to answer the user. 
-If the answer is not in the notes, say "I couldn't find any information about that in your notes."
+Use ONLY the provided Note Context to answer the user.
+If the answer is not in the notes, say "Notlarınızda bu konuyla ilgili bilgi bulamadım."
 Be direct, helpful, and concise.
+Answer in Turkish.
 
 Note Context:
 ${context}<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -1275,7 +1276,7 @@ ${question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
     res.json({ answer: output[0].generated_text.trim() });
   } catch (err) {
     console.error("Server AI Error:", err);
-    res.status(500).json({ error: "AI processing failed on server." });
+    res.status(500).json({ error: "AI işleme sunucuda başarısız oldu." });
   }
 });
 

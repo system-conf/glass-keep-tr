@@ -18,7 +18,7 @@
     "@huggingface/transformers": "^3.8.1",
     "@tailwindcss/vite": "^4.1.11",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.6.0",
+    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "framer-motion": "^12.23.12",
