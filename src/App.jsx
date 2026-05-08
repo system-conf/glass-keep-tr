@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useLayoutEffect, useCallba
 import { createPortal } from "react-dom";
 import { askAI } from "./ai";
 import { marked as markedParser } from "marked";
+import DOMPurify from "dompurify";
 import DrawingCanvas from "./DrawingCanvas";
 
 // Ensure we can call marked.parse(...)
@@ -2480,7 +2481,7 @@ function NotesUI({
               ) : (
                 <div
                   className="text-gray-800 dark:text-gray-200 note-content"
-                  dangerouslySetInnerHTML={{ __html: marked.parse(aiResponse || "") }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(aiResponse || "")) }}
                 />
               )}
             </div>
@@ -3482,7 +3483,7 @@ export default function App() {
   // CSS inject
   useEffect(() => {
     const style = document.createElement("style");
-    style.innerHTML = globalCSS;
+    style.textContent = globalCSS;
     document.head.appendChild(style);
     return () => style.remove();
   }, []);
@@ -5266,6 +5267,7 @@ export default function App() {
     const a = e.target.closest("a");
     if (a) {
       const href = a.getAttribute("href") || "";
+      if (/^javascript:/i.test(href)) { e.preventDefault(); return; }
       if (/^(https?:|mailto:|tel:)/i.test(href)) {
         e.preventDefault();
         e.stopPropagation();
@@ -5644,7 +5646,7 @@ export default function App() {
                   <div
                     ref={noteViewRef}
                     className="note-content note-content--dense whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: marked.parse(mBody || "") }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(mBody || "")) }}
                   />
                 ) : (
                   <div className="relative min-h-[160px]">

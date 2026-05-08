@@ -43,12 +43,23 @@ async function initServerAI() {
 
 const app = express();
 const PORT = Number(process.env.API_PORT || process.env.PORT || 8080);
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-please-change";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET env var is required");
+  process.exit(1);
+}
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 // ---------- Body parsing ----------
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
+// ---------- Security headers & rate limiting ----------
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+app.use(helmet({ contentSecurityPolicy: false }));
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
 
 // ---------- CORS (dev only) ----------
 if (NODE_ENV !== "production") {
@@ -62,7 +73,7 @@ if (NODE_ENV !== "production") {
 
 // ---------- Helpers ----------
 const nowISO = () => new Date().toISOString();
-const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const uid = () => crypto.randomUUID();
 
 function signToken(user) {
   return jwt.sign(
@@ -232,7 +243,8 @@ app.get("/api/events", authFromQueryOrHeader, (req, res) => {
   // Help Nginx/Proxies not to buffer SSE
   try { res.setHeader("X-Accel-Buffering", "no"); } catch { }
   // If served cross-origin (e.g. static site + separate API host), allow EventSource
-  if (req.headers.origin) {
+  const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
+  if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
     try { res.setHeader("Access-Control-Allow-Origin", req.headers.origin); } catch { }
   }
   res.flushHeaders?.();
@@ -270,8 +282,8 @@ async function startup() {
   const countResult = await client.execute("SELECT COUNT(*) as count FROM users");
   if (Number(countResult.rows[0].count) === 0) {
     const adminEmail = "admin";
-    const adminPass = "admin";
-    const hash = bcrypt.hashSync(adminPass, 10);
+    const adminPass = crypto.randomBytes(12).toString("hex");
+    const hash = await bcrypt.hash(adminPass, 10);
     const insertResult = await client.execute({
       sql: "INSERT INTO users (name,email,password_hash,created_at) VALUES (?,?,?,?)",
       args: ["Admin", adminEmail, hash, nowISO()],
@@ -312,7 +324,7 @@ startup().catch((err) => {
 });
 
 // ---------- Auth ----------
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", authLimiter, async (req, res) => {
   try {
     // Check if new account creation is allowed
     const allowNew = await getAdminSetting("allowNewAccounts");
@@ -331,7 +343,7 @@ app.post("/api/register", async (req, res) => {
     if (existingUser.rows.length > 0)
       return res.status(409).json({ error: "Bu e-posta zaten kayıtlı." });
 
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = await bcrypt.hash(password, 10);
     const insertResult = await client.execute({
       sql: "INSERT INTO users (name,email,password_hash,created_at) VALUES (?,?,?,?)",
       args: [name?.trim() || "User", email.trim(), hash, nowISO()],
@@ -356,7 +368,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
     let user = null;
@@ -368,7 +380,7 @@ app.post("/api/login", async (req, res) => {
       if (result.rows.length > 0) user = result.rows[0];
     }
     if (!user) return res.status(401).json({ error: "Bu e-posta ile hesap bulunamadı." });
-    if (!bcrypt.compareSync(password || "", user.password_hash)) {
+    if (!await bcrypt.compare(password || "", user.password_hash)) {
       return res.status(401).json({ error: "Yanlış şifre." });
     }
     const token = signToken(user);
@@ -396,7 +408,7 @@ function generateSecretKey(bytes = 32) {
 app.post("/api/secret-key", auth, async (req, res) => {
   try {
     const key = generateSecretKey(32);
-    const hash = bcrypt.hashSync(key, 10);
+    const hash = await bcrypt.hash(key, 10);
     await client.execute({
       sql: "UPDATE users SET secret_key_hash = ?, secret_key_created_at = ? WHERE id = ?",
       args: [hash, nowISO(), req.user.id],
@@ -409,23 +421,25 @@ app.post("/api/secret-key", auth, async (req, res) => {
 });
 
 // Login with secret key
-app.post("/api/login/secret", async (req, res) => {
+app.post("/api/login/secret", authLimiter, async (req, res) => {
   try {
-    const { key } = req.body || {};
+    const { key, email } = req.body || {};
     if (!key || typeof key !== "string" || key.length < 16) {
       return res.status(400).json({ error: "Geçersiz anahtar." });
     }
-    const result = await client.execute(
-      "SELECT id, name, email, is_admin, secret_key_hash FROM users WHERE secret_key_hash IS NOT NULL"
-    );
-    for (const u of result.rows) {
-      if (u.secret_key_hash && bcrypt.compareSync(key, u.secret_key_hash)) {
-        const token = signToken(u);
-        return res.json({
-          token,
-          user: { id: u.id, name: u.name, email: u.email, is_admin: !!u.is_admin },
-        });
-      }
+    if (!email) return res.status(400).json({ error: "E-posta gereklidir." });
+    const result = await client.execute({
+      sql: "SELECT id, name, email, is_admin, secret_key_hash FROM users WHERE lower(email) = lower(?) AND secret_key_hash IS NOT NULL",
+      args: [email],
+    });
+    if (result.rows.length === 0) return res.status(401).json({ error: "Gizli anahtar tanınmadı." });
+    const u = result.rows[0];
+    if (u.secret_key_hash && await bcrypt.compare(key, u.secret_key_hash)) {
+      const token = signToken(u);
+      return res.json({
+        token,
+        user: { id: u.id, name: u.name, email: u.email, is_admin: !!u.is_admin },
+      });
     }
     return res.status(401).json({ error: "Gizli anahtar tanınmadı." });
   } catch (err) {
@@ -506,6 +520,8 @@ app.get("/api/notes", auth, async (req, res) => {
 app.post("/api/notes", auth, async (req, res) => {
   try {
     const body = req.body || {};
+    if (String(body.title || "").length > 500) return res.status(400).json({ error: "Başlık çok uzun (maks 500 karakter)" });
+    if (String(body.content || "").length > 500000) return res.status(400).json({ error: "İçerik çok uzun (maks 500KB)" });
     const rawImages = Array.isArray(body.images) ? body.images : [];
     const processedImagesJson = await processImages(JSON.stringify(rawImages));
 
@@ -1034,6 +1050,36 @@ app.get("/api/notes/export", auth, async (req, res) => {
   }
 });
 
+// Get single note (MUST be after all fixed /api/notes/* routes)
+app.get("/api/notes/:id", auth, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await client.execute({
+      sql: `SELECT n.* FROM notes n
+            LEFT JOIN note_collaborators nc ON n.id = nc.note_id AND nc.user_id = ?
+            WHERE n.id = ? AND (n.user_id = ? OR nc.user_id IS NOT NULL)`,
+      args: [req.user.id, id, req.user.id],
+    });
+    if (result.rows.length === 0) return res.status(404).json({ error: "Not bulunamadı" });
+    const r = result.rows[0];
+    const collabResult = await client.execute({
+      sql: "SELECT u.id, u.name, u.email FROM note_collaborators nc JOIN users u ON nc.user_id = u.id WHERE nc.note_id = ?",
+      args: [id],
+    });
+    res.json({
+      id: r.id, user_id: r.user_id, type: r.type, title: r.title,
+      content: r.content, items: JSON.parse(r.items_json || "[]"),
+      tags: JSON.parse(r.tags_json || "[]"), images: JSON.parse(r.images_json || "[]"),
+      color: r.color, pinned: !!r.pinned, position: r.position, timestamp: r.timestamp,
+      updated_at: r.updated_at, lastEditedBy: r.last_edited_by, lastEditedAt: r.last_edited_at,
+      archived: !!r.archived, collaborators: collabResult.rows,
+    });
+  } catch (err) {
+    console.error("Get note error:", err);
+    res.status(500).json({ error: "Not yüklenemedi" });
+  }
+});
+
 app.post("/api/notes/import", auth, async (req, res) => {
   try {
     const payload = req.body || {};
@@ -1043,6 +1089,7 @@ app.post("/api/notes/import", auth, async (req, res) => {
         ? payload
         : [];
     if (!src.length) return res.status(400).json({ error: "İçe aktarılacak not yok." });
+    if (src.length > 500) return res.status(400).json({ error: "En fazla 500 not içe aktarılabilir" });
 
     const existingResult = await client.execute({
       sql: `SELECT id FROM notes WHERE user_id = ? AND archived = 0`,
@@ -1254,14 +1301,14 @@ app.post("/api/admin/users", auth, adminOnly, async (req, res) => {
       return res.status(409).json({ error: "Bu e-posta zaten kayıtlı." });
     }
 
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = await bcrypt.hash(password, 10);
     const insertResult = await client.execute({
       sql: "INSERT INTO users (name,email,password_hash,created_at) VALUES (?,?,?,?)",
       args: [name.trim(), email.trim(), hash, nowISO()],
     });
 
     // Set admin status if specified
-    if (is_admin) {
+    if (is_admin === true) {
       await client.execute({
         sql: "UPDATE users SET is_admin=1 WHERE id=?",
         args: [insertResult.lastInsertRowid],
@@ -1339,7 +1386,7 @@ app.patch("/api/admin/users/:id", auth, adminOnly, async (req, res) => {
 
     if (password) {
       updates.push("password_hash = ?");
-      params.push(bcrypt.hashSync(password, 10));
+      params.push(await bcrypt.hash(password, 10));
     }
 
     if (is_admin !== undefined) {
@@ -1408,7 +1455,7 @@ app.post("/api/ai/initialize", auth, async (req, res) => {
   }
 });
 
-app.post("/api/ai/ask", auth, async (req, res) => {
+app.post("/api/ai/ask", auth, aiLimiter, async (req, res) => {
   const { question, notes } = req.body || {};
   if (!question) return res.status(400).json({ error: "Soru eksik" });
 
@@ -1464,7 +1511,7 @@ ${question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 });
 
 // ---------- Health ----------
-app.get("/api/health", (_req, res) => res.json({ ok: true, env: NODE_ENV }));
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 // ---------- Static (production) ----------
 if (NODE_ENV === "production") {
