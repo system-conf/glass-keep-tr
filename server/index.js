@@ -64,7 +64,7 @@ if (NODE_ENV !== "production") {
 const dbFile =
   process.env.DB_FILE ||
   process.env.SQLITE_FILE ||
-  path.join(__dirname, "data.sqlite");
+  (process.env.VERCEL ? path.join("/tmp", "data.sqlite") : path.join(__dirname, "data.sqlite"));
 
 // Ensure the directory for the DB exists (helps on Windows/macOS + Docker bind mounts)
 try {
@@ -1292,7 +1292,12 @@ if (NODE_ENV === "production") {
   });
 }
 
-// ---------- Listen ----------
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`API listening on http://0.0.0.0:${PORT}  (env=${NODE_ENV})`);
-});
+// ---------- Listen (local only) ----------
+if (!process.env.VERCEL) {
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`API listening on http://0.0.0.0:${PORT}  (env=${NODE_ENV})`);
+  });
+}
+
+// ---------- Export for Vercel Serverless ----------
+module.exports = app;
